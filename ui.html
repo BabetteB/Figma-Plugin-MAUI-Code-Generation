@@ -17,128 +17,107 @@
         .popup-button {
             text-align: right;
         }
-        select {
-            width: 100%;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
+        .node {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
+            align-items: center;
         }
-        .nested {
-            display: none;
+        .dropdown {
+            margin-left: 10px;
         }
-        .button-bar {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
+        .children {
+            margin-left: 20px; /* Add indentation for children */
+            display: none; /* Initially hide children */
         }
-        .button {
-            padding: 5px 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            cursor: pointer;
+        .unfolded {
+            display: block; /* Show children when unfolded */
         }
     </style>
 </head>
 <body>
     <div>
         <h3>Figma Design 2 .NET MAUI Code Generator</h3>
+
         <div class="popup-button">
             <a href="#" id="popup-link">How 2 use?</a>
         </div>
+
         <ul id="node-list">
             <!-- JavaScript will populate this list -->
         </ul>
+
         <div class="button-bar">
           <button class="button" id="save-button">Save</button>
           <button class="button" id="export-button">Export Design</button>
         </div>
     </div>
 
-    <script>
+<script>
+  onmessage = (event) => {
+            let data = event.data.pluginMessage;
+            console.log("got nested list from the code.js", data);
 
-        // JavaScript code to open the popup and populate the list
-        document.getElementById('popup-link').addEventListener('click', function(event) {
-            event.preventDefault();
-            openPopup();
-        });
-
-        function openPopup() {
-            const popup = window.open('', 'popup', 'width=400,height=300');
-            popup.document.write('<h2>Lorem Ipsum</h2>');
-            popup.document.write('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>');
-            popup.document.write('<button onclick="window.close()">OK</button>');
-        }
-        
-        onmessage = (event) => {
-          let data = event.data.pluginMessage
-          console.log("got this from the plugin code", data)
-          
-          // Populate the listview
-          const nodeList = document.getElementById('node-list');
-          data.forEach(node => {
+            function createNodeElement(node) {
                 const listItem = document.createElement('li');
-                listItem.textContent = node.name;
-                listItem.classList.add('node');
-
+                const nodeDiv = document.createElement('div');
                 const dropdown = document.createElement('select');
+
+                nodeDiv.textContent = node.parent.name;
+                dropdown.className = 'dropdown';
                 dropdown.innerHTML = `
-                  <div class="node-name">${node.name}</div>
-                    <div>
-                      <select>
-                          <option value="" disabled selected>Select value</option>
-                          <option value="image">Image</option>
-                          <option value="label">Label</option>
-                          <option value="button">Button</option>
-                          <option value="image-button">ImageButton</option>
-                          <option value="swipe-view">SwipeView</option>
-                          <option value="check-box">CheckBox</option>
-                          <option value="slider">Slider</option>
-                          <option value="switch">Switch</option>
-                          <option value="editor">Editor</option>
-                          <option value="entry">Entry</option>
-                          <option value="list-view">ListView</option>
-                          <option value="table-view">TableView</option>
-                          <option value="menu-item">MenuItem</option>
-                          <option value="toolbar-item">ToolbarItem</option>
-                          <option value="display-pop-ups">Display Pop-ups</option>
-                      </select>
-                    </div>
+                <div class="node-name">${node.parent.name}</div>
+                <div>
+                    <select>
+                        <option value="" disabled selected>Select value</option>
+                        <option value="image">Image</option>
+                        <option value="label">Label</option>
+                        <option value="button">Button</option>
+                        <option value="image-button">ImageButton</option>
+                        <option value="swipe-view">SwipeView</option>
+                        <option value="check-box">CheckBox</option>
+                        <option value="slider">Slider</option>
+                        <option value="switch">Switch</option>
+                        <option value="editor">Editor</option>
+                        <option value="entry">Entry</option>
+                        <option value="list-view">ListView</option>
+                        <option value="table-view">TableView</option>
+                        <option value="menu-item">MenuItem</option>
+                        <option value="toolbar-item">ToolbarItem</option>
+                        <option value="display-pop-ups">Display Pop-ups</option>
+                    </select>
+                </div>
                 `;
 
-                listItem.appendChild(dropdown);
+                nodeDiv.appendChild(dropdown);
+                listItem.appendChild(nodeDiv);
 
-                const nestedList = document.createElement('ul');
-                nestedList.classList.add('nested');
-                listItem.appendChild(nestedList);
+                if (node.children.length > 0) {
+                    const childrenList = document.createElement('ul');
+                    childrenList.className = 'children';
 
-                if (node.nodes.length > 0) {
-                    const expandIcon = document.createElement('span');
-                    expandIcon.textContent = '+';
-                    listItem.appendChild(expandIcon);
+                    node.children.forEach((child) => {
+                        const childNodeElement = createNodeElement(child);
+                        childrenList.appendChild(childNodeElement);
+                    });
 
-                    expandIcon.addEventListener('click', () => {
-                        nestedList.style.display = nestedList.style.display === 'none' ? 'block' : 'none';
-                        dropdown.style.display = nestedList.style.display === 'none' ? 'inline-block' : 'none';
-                        expandIcon.textContent = nestedList.style.display === 'none' ? '+' : '-';
+                    listItem.appendChild(childrenList);
+
+                    // Add click event to toggle children visibility
+                    nodeDiv.style.cursor = 'pointer';
+                    nodeDiv.addEventListener('click', () => {
+                        childrenList.classList.toggle('unfolded');
                     });
                 }
 
-                nodeList.appendChild(listItem);
+                return listItem;
+            }
 
-                if (node.nodes.length > 0) {
-                    createNodeList(node.nodes, nestedList);
-                }
+            const nodeList = document.getElementById("node-list");
+
+            data.forEach((node) => {
+                const nodeElement = createNodeElement(node);
+                nodeList.appendChild(nodeElement);
             });
         }
-        
-
-    </script>
+</script>
 </body>
 </html>

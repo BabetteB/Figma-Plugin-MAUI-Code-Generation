@@ -1,15 +1,36 @@
 "use strict";
 // src/plugin.ts
-figma.showUI(__html__, { width: 300, height: 400 });
-function populateElementList() {
-    const nodeList = [];
-    // Iterate through the nodes on the current page
-    const allFrames = figma.currentPage.children;
-    allFrames.forEach(node => {
-        // Access the name of each node and add it to the list
-        nodeList.push({ name: node.name, node });
-    });
-    console.log('sendding data to ui file');
-    figma.ui.postMessage(nodeList);
+figma.showUI(__html__, { width: 600, height: 400 });
+function makeDisplayNode(_node) {
+    return { name: _node.name, node: _node };
 }
-populateElementList();
+function childrenToNestedNodes(cn) {
+    const list = [];
+    cn.forEach((c) => {
+        const nn = traverse(c);
+        list.push(nn);
+    });
+    return list;
+}
+function traverse(cn) {
+    const dn = makeDisplayNode(cn);
+    const nn = {
+        parent: dn,
+        children: [],
+    };
+    if ('children' in cn) {
+        // If the child has children, we must go through them and make them into nested nodes
+        nn.children = childrenToNestedNodes(cn.children);
+    }
+    return nn;
+}
+const currentPage = figma.currentPage;
+const rootNode = makeDisplayNode(currentPage);
+console.log('rootnode :' + rootNode);
+const nodes = [
+    {
+        parent: rootNode,
+        children: childrenToNestedNodes(currentPage.children),
+    },
+];
+figma.ui.postMessage(nodes);
