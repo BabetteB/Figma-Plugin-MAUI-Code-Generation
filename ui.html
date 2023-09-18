@@ -19,13 +19,19 @@
         }
         .node {
             display: flex;
-            align-items: center;
+            align-items: center
         }
-        .dropdown {
-            margin-left: 10px;
+        .nodeDiv {
+            width: 90%;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            margin-top: 4px;
+            padding: 4px;
+            border-bottom: 1px #c7c7c7 solid;
         }
         .children {
-            margin-left: 20px; /* Add indentation for children */
+            margin-left: 8px; /* Add indentation for children */
             display: none; /* Initially hide children */
         }
         .unfolded {
@@ -59,35 +65,40 @@
             function createNodeElement(node) {
                 const listItem = document.createElement('li');
                 const nodeDiv = document.createElement('div');
-                const dropdown = document.createElement('select');
+                nodeDiv.className = 'nodeDiv';
+                const textDiv = document.createElement('div');
+                const select = document.createElement('select');
 
-                nodeDiv.textContent = node.parent.name;
-                dropdown.className = 'dropdown';
-                dropdown.innerHTML = `
-                <div class="node-name">${node.parent.name}</div>
-                <div>
-                    <select>
-                        <option value="" disabled selected>Select value</option>
-                        <option value="image">Image</option>
-                        <option value="label">Label</option>
-                        <option value="button">Button</option>
-                        <option value="image-button">ImageButton</option>
-                        <option value="swipe-view">SwipeView</option>
-                        <option value="check-box">CheckBox</option>
-                        <option value="slider">Slider</option>
-                        <option value="switch">Switch</option>
-                        <option value="editor">Editor</option>
-                        <option value="entry">Entry</option>
-                        <option value="list-view">ListView</option>
-                        <option value="table-view">TableView</option>
-                        <option value="menu-item">MenuItem</option>
-                        <option value="toolbar-item">ToolbarItem</option>
-                        <option value="display-pop-ups">Display Pop-ups</option>
-                    </select>
-                </div>
-                `;
+                textDiv.textContent = node.parent.name;
+                nodeDiv.appendChild(textDiv);
 
-                nodeDiv.appendChild(dropdown);
+                select.className = 'select';
+                select.innerHTML = `
+                    <div class="node-name">${node.parent.name}</div>
+                    <div>
+                        <select>
+                            <option value="" disabled selected>Select value</option>
+                            <option value="none">None</option>
+                            <option value="image">Image</option>
+                            <option value="label">Label</option>
+                            <option value="button">Button</option>
+                            <option value="image-button">ImageButton</option>
+                            <option value="swipe-view">SwipeView</option>
+                            <option value="check-box">CheckBox</option>
+                            <option value="slider">Slider</option>
+                            <option value="switch">Switch</option>
+                            <option value="editor">Editor</option>
+                            <option value="entry">Entry</option>
+                            <option value="list-view">ListView</option>
+                            <option value="table-view">TableView</option>
+                            <option value="menu-item">MenuItem</option>
+                            <option value="toolbar-item">ToolbarItem</option>
+                            <option value="display-pop-ups">Display Pop-ups</option>
+                        </select>
+                    </div>
+                    `;
+
+                nodeDiv.appendChild(select);
                 listItem.appendChild(nodeDiv);
 
                 if (node.children.length > 0) {
@@ -102,8 +113,8 @@
                     listItem.appendChild(childrenList);
 
                     // Add click event to toggle children visibility
-                    nodeDiv.style.cursor = 'pointer';
-                    nodeDiv.addEventListener('click', () => {
+                    textDiv.style.cursor = 'pointer';
+                    textDiv.addEventListener('click', () => {
                         childrenList.classList.toggle('unfolded');
                     });
                 }
