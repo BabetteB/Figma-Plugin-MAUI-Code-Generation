@@ -1,17 +1,134 @@
-<h2>Rectangle Creator</h2>
-<p>Count: <input id="count" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Example</title>
+    <style>
+        .frame {
+            width: 300px;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+        h1 {
+            text-align: left;
+        }
+        .popup-button {
+            text-align: right;
+        }
+        .node {
+            display: flex;
+            align-items: center
+        }
+        .nodeDiv {
+            width: 90%;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            margin-top: 4px;
+            padding: 4px;
+            border-bottom: 1px #c7c7c7 solid;
+        }
+        .children {
+            margin-left: 8px; /* Add indentation for children */
+            display: none; /* Initially hide children */
+        }
+        .unfolded {
+            display: block; /* Show children when unfolded */
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h3>Figma Design 2 .NET MAUI Code Generator</h3>
+
+        <div class="popup-button">
+            <a href="#" id="popup-link">How 2 use?</a>
+        </div>
+
+        <ul id="node-list">
+            <!-- JavaScript will populate this list -->
+        </ul>
+
+        <div class="button-bar">
+          <button class="button" id="save-button">Save</button>
+          <button class="button" id="export-button">Export Design</button>
+        </div>
+    </div>
+
 <script>
+  onmessage = (event) => {
+            let data = event.data.pluginMessage;
+            console.log("got nested list from the code.js", data);
 
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*')
-}
+            function createNodeElement(node) {
+                const listItem = document.createElement('li');
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'nodeDiv';
+                const textDiv = document.createElement('div');
+                const select = document.createElement('select');
 
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
+                textDiv.textContent = node.parent.name;
+                nodeDiv.appendChild(textDiv);
 
+                select.className = 'select';
+                select.innerHTML = `
+                    <div class="node-name">${node.parent.name}</div>
+                    <div>
+                        <select>
+                            <option value="" disabled selected>Select value</option>
+                            <option value="none">None</option>
+                            <option value="image">Image</option>
+                            <option value="label">Label</option>
+                            <option value="button">Button</option>
+                            <option value="image-button">ImageButton</option>
+                            <option value="swipe-view">SwipeView</option>
+                            <option value="check-box">CheckBox</option>
+                            <option value="slider">Slider</option>
+                            <option value="switch">Switch</option>
+                            <option value="editor">Editor</option>
+                            <option value="entry">Entry</option>
+                            <option value="list-view">ListView</option>
+                            <option value="table-view">TableView</option>
+                            <option value="menu-item">MenuItem</option>
+                            <option value="toolbar-item">ToolbarItem</option>
+                            <option value="display-pop-ups">Display Pop-ups</option>
+                        </select>
+                    </div>
+                    `;
+
+                nodeDiv.appendChild(select);
+                listItem.appendChild(nodeDiv);
+
+                if (node.children.length > 0) {
+                    const childrenList = document.createElement('ul');
+                    childrenList.className = 'children';
+
+                    node.children.forEach((child) => {
+                        const childNodeElement = createNodeElement(child);
+                        childrenList.appendChild(childNodeElement);
+                    });
+
+                    listItem.appendChild(childrenList);
+
+                    // Add click event to toggle children visibility
+                    textDiv.style.cursor = 'pointer';
+                    textDiv.addEventListener('click', () => {
+                        childrenList.classList.toggle('unfolded');
+                    });
+                }
+
+                return listItem;
+            }
+
+            const nodeList = document.getElementById("node-list");
+
+            data.forEach((node) => {
+                const nodeElement = createNodeElement(node);
+                nodeList.appendChild(nodeElement);
+            });
+        }
 </script>
+</body>
+</html>

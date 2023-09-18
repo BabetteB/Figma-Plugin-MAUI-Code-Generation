@@ -3,10 +3,12 @@
   "id": "1268149469600176127",
   "api": "1.0.0",
   "main": "code.js",
-  "capabilities": [],
   "enableProposedApi": false,
-  "editorType": [
-    "figma"
+  "editorType": ["figma", "dev"],
+  "capabilities": ["inspect", "codegen"],
+  "codegenLanguages": [
+    {"label": "React", "value": "react"},
+    {"label": ".NET MAUI", "value": ".net_maui"}
   ],
   "ui": "ui.html",
   "networkAccess": {

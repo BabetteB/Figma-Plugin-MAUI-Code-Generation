@@ -1,34 +1,55 @@
-// This plugin will open a window to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
+// src/plugin.ts
+figma.showUI(__html__, { width: 600, height: 400 });
 
-// This file holds the main code for plugins. Code in this file has access to
-// the *figma document* via the figma global object.
-// You can access browser APIs in the <script> tag inside "ui.html" which has a
-// full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
+type DisplayNode = {
+  name: string,
+  node: BaseNode
+}
 
-// This shows the HTML page in "ui.html".
-figma.showUI(__html__);
+type NestedNode = {
+  parent: DisplayNode,
+  children: NestedNode[]
+};
 
-// Calls to "parent.postMessage" from within the HTML page will trigger this
-// callback. The callback will be passed the "pluginMessage" property of the
-// posted message.
-figma.ui.onmessage = msg => {
-  // One way of distinguishing between different types of messages sent from
-  // your HTML page is to use an object with a "type" property like this.
-  if (msg.type === 'create-rectangles') {
-    const nodes: SceneNode[] = [];
-    for (let i = 0; i < msg.count; i++) {
-      const rect = figma.createRectangle();
-      rect.x = i * 150;
-      rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-      figma.currentPage.appendChild(rect);
-      nodes.push(rect);
-    }
-    figma.currentPage.selection = nodes;
-    figma.viewport.scrollAndZoomIntoView(nodes);
+function makeDisplayNode(_node : BaseNode) : DisplayNode {
+  return {name: _node.name, node: _node}
+}
+
+function childrenToNestedNodes(cn: SceneNode[]): NestedNode[] {
+  const list: NestedNode[] = [];
+
+  cn.forEach((c) => {
+    const nn = traverse(c);
+    list.push(nn);
+  });
+
+  return list;
+}
+
+function traverse(cn: SceneNode): NestedNode {
+  const dn: DisplayNode = makeDisplayNode(cn);
+  const nn: NestedNode = {
+    parent: dn,
+    children: [],
+  };
+
+  if ('children' in cn) {
+    // If the child has children, we must go through them and make them into nested nodes
+    nn.children = childrenToNestedNodes(cn.children as SceneNode[]);
   }
 
-  // Make sure to close the plugin when you're done. Otherwise the plugin will
-  // keep running, which shows the cancel button at the bottom of the screen.
-  figma.closePlugin();
-};
+  return nn;
+}
+
+const currentPage = figma.currentPage;
+const rootNode: DisplayNode = makeDisplayNode(currentPage);
+console.log('rootnode :' + rootNode);
+
+const nodes: NestedNode[] = [
+  {
+    parent: rootNode,
+    children: childrenToNestedNodes(currentPage.children as SceneNode[]),
+  },
+];
+
+figma.ui.postMessage(nodes);
