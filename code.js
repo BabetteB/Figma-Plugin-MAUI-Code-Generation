@@ -1,8 +1,7 @@
-"use strict";
 // src/plugin.ts
 figma.showUI(__html__, { width: 600, height: 400 });
 function makeDisplayNode(_node) {
-    return { name: _node.name, node: _node };
+    return { name: _node.name, type: _node.type, node: _node };
 }
 function childrenToNestedNodes(cn) {
     const list = [];
@@ -33,4 +32,6 @@ const nodes = [
         children: childrenToNestedNodes(currentPage.children),
     },
 ];
+console.log('node:', nodes);
 figma.ui.postMessage(nodes);
+
