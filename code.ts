@@ -1,18 +1,19 @@
 // src/plugin.ts
 figma.showUI(__html__, { width: 600, height: 400 });
 
-type DisplayNode = {
+export type DisplayNode = {
   name: string,
+  type : string,
   node: BaseNode
 }
 
-type NestedNode = {
+export type NestedNode = {
   parent: DisplayNode,
   children: NestedNode[]
-};
+}
 
 function makeDisplayNode(_node : BaseNode) : DisplayNode {
-  return {name: _node.name, node: _node}
+  return {name: _node.name, type: _node.type, node: _node}
 }
 
 function childrenToNestedNodes(cn: SceneNode[]): NestedNode[] {
@@ -45,11 +46,16 @@ const currentPage = figma.currentPage;
 const rootNode: DisplayNode = makeDisplayNode(currentPage);
 console.log('rootnode :' + rootNode);
 
+const selection = currentPage.selection;
+console.log('selection :', selection);
+
 const nodes: NestedNode[] = [
   {
     parent: rootNode,
     children: childrenToNestedNodes(currentPage.children as SceneNode[]),
   },
 ];
+
+console.log('node:', nodes);
 
 figma.ui.postMessage(nodes);
