@@ -36,3 +36,4 @@ const nodes = [
 ];
 console.log('node:', nodes);
 figma.ui.postMessage(nodes);
+

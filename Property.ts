@@ -26,6 +26,19 @@ export enum PropertyName {
     //Frame
     Spacing,
 
+    //FlexLayout
+    AlignContent,
+    AlignItems,
+    Direction,
+    JustifyContent,
+    Position,
+    Wrap,
+    AlignSelf,
+    Basis,
+    Grow,
+    Order,
+    Shrink,
+
     //Polygon
     Points,
     Fill,
