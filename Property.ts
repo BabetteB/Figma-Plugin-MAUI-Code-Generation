@@ -23,6 +23,15 @@ export enum PropertyName {
     TextType,
     VerticalTextAlignment,
 
+    //Frame
+    Spacing,
+
+    //Polygon
+    Points,
+    Fill,
+    FillRule,
+    Stroke,
+    StrokeThickness,
 
     FontAttribute,
     Width,

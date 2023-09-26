@@ -46,6 +46,9 @@ const currentPage = figma.currentPage;
 const rootNode: DisplayNode = makeDisplayNode(currentPage);
 console.log('rootnode :' + rootNode);
 
+const selection = currentPage.selection;
+console.log('selection :', selection);
+
 const nodes: NestedNode[] = [
   {
     parent: rootNode,

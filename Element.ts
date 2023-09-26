@@ -40,6 +40,7 @@ export enum ElementName {
     Polygon,
     Line,
     Path,
+    HorizontalStackLayout,
     Viewbox,
     ContentControl,
     UserControl,

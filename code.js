@@ -26,6 +26,8 @@ function traverse(cn) {
 const currentPage = figma.currentPage;
 const rootNode = makeDisplayNode(currentPage);
 console.log('rootnode :' + rootNode);
+const selection = currentPage.selection;
+console.log('selection :', selection);
 const nodes = [
     {
         parent: rootNode,
@@ -34,4 +36,3 @@ const nodes = [
 ];
 console.log('node:', nodes);
 figma.ui.postMessage(nodes);
-
