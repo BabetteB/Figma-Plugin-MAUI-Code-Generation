@@ -1,11 +1,14 @@
-import { DisplayNode, NestedNode } from "./code";
 import { Property, PropertyName } from "./Property";
 import { Element, ElementName } from "./Element";
 
 import { TranslateFigmaFrameToXamlLayout } from "./figma-node-translation/frame-2-layout";
+import { TranslateEllipseElement } from "./figma-node-translation/shapes/ellipse-2-ellipse";
 import { TranslateTextElement } from "./figma-node-translation/text-2-label";
 import { ContentView } from "./xaml-views-classes/xaml-view";
 import { Binding, CustomControl } from "./xaml-views-classes/xaml-custom-control";
+import { TranslateRectangleElement } from "./figma-node-translation/shapes/rectangle-2-rectangle";
+import { TranslateLineElement } from "./figma-node-translation/shapes/line-2-line";
+import { NestedNode } from "./code";
 
 
 function checkNodeType(node: BaseNode): string {
@@ -27,15 +30,15 @@ function checkNodeType(node: BaseNode): string {
 
     case 'ELLIPSE':
       let ellipseNode = node as EllipseNode;
-      return ''; //TranslateEllipseElement(ellipseNode);
-      
+      return TranslateEllipseElement(ellipseNode);
+
     case 'LINE':
       let lineNode = node as LineNode;
-      return '';
+      return TranslateLineElement(lineNode);
 
     case 'RECTANGLE':
       let rectangleNode = node as RectangleNode;
-      return ''; //TranslateRectangleElement(rectangleNode);
+      return TranslateRectangleElement(rectangleNode);
 
     case 'POLYGON':
       let polygonNode = node as PolygonNode;
@@ -52,7 +55,7 @@ function checkNodeType(node: BaseNode): string {
       // TODO: Make new resource file / new window
       let contentView = new ContentView(node.name);
       // TODO: Translate children and append to contentview
-      return contentView.getStartTag() + 'children' + contentView.getEndTag();
+      return contentView.getStartTag() + 'parsleXaml(children)' + contentView.getEndTag();
 
     //Are not getting castet 
     case 'VECTOR':
@@ -68,7 +71,7 @@ function checkNodeType(node: BaseNode): string {
   }
 }
 
-function ParseFigma(nodes: NestedNode[]): string {
+export function ParseFigma(nodes: NestedNode[]): string {
   let xamlCode = "";
 
   nodes.forEach((node) => {

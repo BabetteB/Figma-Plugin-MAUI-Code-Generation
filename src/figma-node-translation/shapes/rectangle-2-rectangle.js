@@ -1,7 +1,7 @@
 import { ElementName } from "../../Element";
-import { PropertyName } from "../../Property";
+import { PropertyName } from "../../src/Property";
 import { formatEndTag, formatStartTag } from "../../XamlParser";
-function TranslateRectangleElement(node) {
+export function TranslateRectangleElement(node) {
     const rectangleProperties = [
         { name: PropertyName.Width, value: node.width.toString() },
         { name: PropertyName.Height, value: node.height.toString() }

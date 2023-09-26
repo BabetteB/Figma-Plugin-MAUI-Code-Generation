@@ -1,3 +1,5 @@
+import { ParseFigma } from "./XamlParser";
+
 // src/plugin.ts
 figma.showUI(__html__, { width: 600, height: 400 });
 
@@ -43,19 +45,23 @@ function traverse(cn: SceneNode): NestedNode {
 }
 
 const currentPage = figma.currentPage;
-const rootNode: DisplayNode = makeDisplayNode(currentPage);
-console.log('rootnode :' + rootNode);
+const selection = currentPage.selection[0];
 
-const selection = currentPage.selection;
-console.log('selection :', selection);
+const rootNode: DisplayNode = makeDisplayNode(selection as BaseNode);
+
+let list : SceneNode[] = [];
+if ('children' in selection){
+  selection.children.forEach( c => list.push(c));
+}
 
 const nodes: NestedNode[] = [
   {
     parent: rootNode,
-    children: childrenToNestedNodes(currentPage.children as SceneNode[]),
+    children: childrenToNestedNodes(list),
   },
 ];
 
-console.log('node:', nodes);
 
 figma.ui.postMessage(nodes);
+
+console.log(ParseFigma(nodes))

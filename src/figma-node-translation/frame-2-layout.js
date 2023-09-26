@@ -1,5 +1,5 @@
 import { ElementName } from "../Element";
-import { PropertyName } from "../Property";
+import { PropertyName } from "../src/Property";
 import { formatEndTag, formatStartTag } from "../XamlParser";
 export function TranslateFigmaFrameToXamlLayout(node) {
     switch (node.layoutMode) {
