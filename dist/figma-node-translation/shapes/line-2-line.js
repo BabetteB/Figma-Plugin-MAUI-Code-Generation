@@ -1,5 +1,5 @@
 import { ElementName } from "../../Element";
-import { PropertyName } from "../../src/Property";
+import { PropertyName } from "../../Property";
 import { formatEndTag, formatStartTag } from "../../XamlParser";
 export function TranslateLineElement(node) {
     const lineProperties = [

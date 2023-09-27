@@ -16,8 +16,9 @@ function checkNodeType(node: BaseNode): string {
   switch (node.type) {
     case 'FRAME':
       let frameNode = node as FrameNode;
-      //TODO: Translate Children
-      return TranslateFigmaFrameToXamlLayout(node);
+      let nestedNodes = '';
+      frameNode.children.forEach(n => nestedNodes += checkNodeType(n) + `\n`);
+      return TranslateFigmaFrameToXamlLayout(node) + nestedNodes;
 
     case 'GROUP':
       let groupNode = node as GroupNode;
@@ -55,7 +56,7 @@ function checkNodeType(node: BaseNode): string {
       // TODO: Make new resource file / new window
       let contentView = new ContentView(node.name);
       // TODO: Translate children and append to contentview
-      return contentView.getStartTag() + 'parsleXaml(children)' + contentView.getEndTag();
+      return contentView.getStartTag() + '\n TODO: parsleXaml(children)' + contentView.getEndTag();
 
     //Are not getting castet 
     case 'VECTOR':
@@ -71,14 +72,14 @@ function checkNodeType(node: BaseNode): string {
   }
 }
 
-export function ParseFigma(nodes: NestedNode[]): string {
+export function ParseFigma(nodes: NestedNode[]) {
   let xamlCode = "";
 
   nodes.forEach((node) => {
     xamlCode += checkNodeType(node.parent.node)
   });
 
-  return xamlCode;
+  console.log(xamlCode);
 }
 export function formatStartTag(element: Element): string {
   const propertyString = element.properties

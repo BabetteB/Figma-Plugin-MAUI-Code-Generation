@@ -1,5 +1,5 @@
 import { ElementName } from "../Element";
-import { PropertyName } from "../src/Property";
+import { PropertyName } from "../Property";
 import { formatEndTag, formatStartTag } from "../XamlParser";
 export function TranslateTextElement(node) {
     var _a, _b, _c, _d;

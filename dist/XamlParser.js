@@ -62,7 +62,7 @@ export function ParseFigma(nodes) {
     nodes.forEach((node) => {
         xamlCode += checkNodeType(node.parent.node);
     });
-    return xamlCode;
+    console.log(xamlCode);
 }
 export function formatStartTag(element) {
     const propertyString = element.properties

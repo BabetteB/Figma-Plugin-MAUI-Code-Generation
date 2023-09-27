@@ -64,4 +64,4 @@ const nodes: NestedNode[] = [
 
 figma.ui.postMessage(nodes);
 
-console.log(ParseFigma(nodes))
+ParseFigma(nodes);
