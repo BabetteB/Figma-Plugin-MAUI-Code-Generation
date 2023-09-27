@@ -1,8 +1,7 @@
 import { Element, ElementName } from "../../Element";
 import { Property, PropertyName } from "../../Property";
-import { formatEndTag, formatStartTag } from "../../XamlParser";
 
-export function TranslateLineElement(node: LineNode): string {
+export function TranslateLineElement(node: LineNode): Element {
     const lineProperties: Property[] = [
       { name: PropertyName.X1,      value: '0' },
       { name: PropertyName.Y1,      value: '0' },
@@ -13,5 +12,5 @@ export function TranslateLineElement(node: LineNode): string {
     ];
   
     const lineElement: Element = { name: ElementName.Line, properties: lineProperties };
-    return formatStartTag(lineElement) + formatEndTag(lineElement);
+    return lineElement; 
   }

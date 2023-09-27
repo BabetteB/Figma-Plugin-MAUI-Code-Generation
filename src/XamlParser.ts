@@ -9,6 +9,7 @@ import { Binding, CustomControl } from "./xaml-views-classes/xaml-custom-control
 import { TranslateRectangleElement } from "./figma-node-translation/shapes/rectangle-2-rectangle";
 import { TranslateLineElement } from "./figma-node-translation/shapes/line-2-line";
 import { NestedNode } from "./code";
+import { ContentPage } from "./xaml-views-classes/xaml-page";
 
 
 function checkNodeType(node: BaseNode): string {
@@ -16,30 +17,36 @@ function checkNodeType(node: BaseNode): string {
   switch (node.type) {
     case 'FRAME':
       let frameNode = node as FrameNode;
-      let nestedNodes = '';
-      frameNode.children.forEach(n => nestedNodes += checkNodeType(n) + `\n`);
-      return TranslateFigmaFrameToXamlLayout(node) + nestedNodes;
+      let nestedFrameNodes = '';
+      frameNode.children.forEach(n => nestedFrameNodes += checkNodeType(n) + `\n`);
+      let frameElement = TranslateFigmaFrameToXamlLayout(node);
+      return formatStartTag(frameElement) + `\t${nestedFrameNodes}` + formatEndTag(frameElement);
 
     case 'GROUP':
       let groupNode = node as GroupNode;
-      //TODO: Translate Children
-      return 'Group';
+      let nestedGroupNodes = '';
+      groupNode.children.forEach(n => nestedGroupNodes += checkNodeType(n) + `\n`);
+      return nestedGroupNodes;
 
     case 'TEXT':
       let textNode = node as TextNode;
-      return TranslateTextElement(textNode);
+      let textElement = TranslateTextElement(textNode);
+      return formatShortTag(textElement);
 
     case 'ELLIPSE':
       let ellipseNode = node as EllipseNode;
-      return TranslateEllipseElement(ellipseNode);
+      let ellipseElement = TranslateEllipseElement(ellipseNode);
+      return formatShortTag(ellipseElement);
 
     case 'LINE':
       let lineNode = node as LineNode;
-      return TranslateLineElement(lineNode);
+      let lineElement = TranslateLineElement(lineNode);
+      return formatShortTag(lineElement);
 
     case 'RECTANGLE':
       let rectangleNode = node as RectangleNode;
-      return TranslateRectangleElement(rectangleNode);
+      let rectangleElement = TranslateRectangleElement(rectangleNode); 
+      return formatShortTag(rectangleElement);
 
     case 'POLYGON':
       let polygonNode = node as PolygonNode;
@@ -55,8 +62,9 @@ function checkNodeType(node: BaseNode): string {
       let componentNode = node as ComponentNode;
       // TODO: Make new resource file / new window
       let contentView = new ContentView(node.name);
-      // TODO: Translate children and append to contentview
-      return contentView.getStartTag() + '\n TODO: parsleXaml(children)' + contentView.getEndTag();
+      let nestedComponent = '';
+      componentNode.children.forEach(n => nestedComponent += `\t${checkNodeType(n)}\n`);
+      return contentView.getStartTag() + `\n${nestedComponent}` + contentView.getEndTag();
 
     //Are not getting castet 
     case 'VECTOR':
@@ -72,24 +80,44 @@ function checkNodeType(node: BaseNode): string {
   }
 }
 
-export function ParseFigma(nodes: NestedNode[]) {
+export function ParseFigma(node: BaseNode) {
   let xamlCode = "";
 
-  nodes.forEach((node) => {
-    xamlCode += checkNodeType(node.parent.node)
-  });
+  let contentPage = new ContentPage(node.name);
+  xamlCode += contentPage.getStartTag() + newline();
+
+  if('children' in node) {
+    node.children.forEach((c) => {
+      xamlCode += checkNodeType(c) + newline();
+    });
+  }
+
+  xamlCode += contentPage.getEndTag();
 
   console.log(xamlCode);
 }
+
 export function formatStartTag(element: Element): string {
   const propertyString = element.properties
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(" ");
+    .join(" " );
 
-  return `<${ElementName[element.name]} ${propertyString}>`;
+  return `<${ElementName[element.name]} ${propertyString}>` + newline();
+}
+
+function formatShortTag(element : Element): string {
+  const propertyString = element.properties
+    .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
+    .join(" " + newline() + `\t`);
+
+  return `<${ElementName[element.name]} ${propertyString}/>` + newline();
 }
 
 export function formatEndTag(element: Element): string {
   return `</${ElementName[element.name]}>`;
+}
+
+function newline() : string {
+  return `\n`
 }
 

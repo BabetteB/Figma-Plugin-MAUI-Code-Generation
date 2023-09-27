@@ -1,8 +1,7 @@
 import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
-import { formatEndTag, formatStartTag } from "../XamlParser";
 
-export function TranslateTextElement(node: TextNode): string {
+export function TranslateTextElement(node: TextNode): Element {
     const textProperties: Property[] = [
       { name: PropertyName.CharacterSpacing,        value: node.letterSpacing.toString() },
       { name: PropertyName.FontAttributes,          value: translateFontWeightToFontAttributes(node.fontWeight as number) || 'None'}, 
@@ -13,7 +12,7 @@ export function TranslateTextElement(node: TextNode): string {
       { name: PropertyName.LineHeight,              value: node.lineHeight?.toString() ?? '' },
       { name: PropertyName.MaxLines,                value: node.maxLines?.toString() ?? '' }, 
       { name: PropertyName.Text,                    value: node.characters },
-      { name: PropertyName.TextColor,               value: translateFillsToTextColor(node.fills as Paint[]) || '#000000'}, 
+      { name: PropertyName.TextColor,               value: '#000000'}, 
       { name: PropertyName.TextDecorations,         value: translateTextDecorationToXAML(node.textDecoration as string) || 'None' },
       { name: PropertyName.TextTransform,           value: translateTextCaseToXAML(node.textCase as string) || 'None' },
       //{ name: PropertyName.TextType,                value: 'Text' } // Set appropriately based on Figma properties
@@ -23,7 +22,7 @@ export function TranslateTextElement(node: TextNode): string {
     ];
   
     const textElement: Element = { name: ElementName.Label, properties: textProperties };
-    return formatStartTag(textElement) + formatEndTag(textElement);
+    return textElement;
   }
   
   function translateTextCaseToXAML(textCase: string): string {
@@ -51,29 +50,7 @@ export function TranslateTextElement(node: TextNode): string {
         return "None";
     }
   }
-  
-  function translateFillsToTextColor(fills: readonly Paint[]): string {
-    if (!fills || fills.length === 0) {
-      // If no fills are defined or the fills array is empty, return a default color (e.g., black).
-      return "#000000"; // Default to black
-    }
-  
-    // Figma's `fills` property typically contains a list of paint objects.
-    // We'll assume the first paint object in the list represents the text color.
-    const fill = fills[0];
-  
-    if (fill.type === "SOLID" && fill.visible) {
-      // If it's a solid paint and it's visible, convert its color to a valid XAML color code.
-      const r = Math.round(fill.color.r * 255).toString(16);
-      const g = Math.round(fill.color.g * 255).toString(16);
-      const b = Math.round(fill.color.b * 255).toString(16);
-  
-      return `#${(r.length < 2 ? "0" : "")}${r}${(g.length < 2 ? "0" : "")}${g}${(b.length < 2 ? "0" : "")}${b}`;
-    }
-  
-    // Default to black if the fill is not a solid visible color.
-    return "#000000"; // Default to black
-  }
+
   
   function translateTextTruncationToLineBreakMode(figmaTextTruncation: string): string {
     //OBS ! Do not fulfill all LineBreakModes of Xaml. See following link for more info about LineBreakMode: https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.linebreakmode?view=net-maui-7.0

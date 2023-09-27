@@ -1,6 +1,5 @@
 import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
-import { formatEndTag, formatStartTag } from "../XamlParser";
 
 export function TranslateFigmaFrameToXamlLayout(node : FrameNode) {
     switch(node.layoutMode){
@@ -14,7 +13,7 @@ export function TranslateFigmaFrameToXamlLayout(node : FrameNode) {
   }
 
 
-function TranslateFlexLayoutElement(node : FrameNode) : string {
+function TranslateFlexLayoutElement(node : FrameNode) : Element {
     const flexLayoutProperties: Property[] = [
         { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
         { name: PropertyName.HeightRequest,     value: node.height.toString() },
@@ -35,10 +34,10 @@ function TranslateFlexLayoutElement(node : FrameNode) : string {
         //{ name: PropertyName.HorizontalOptions, value: node.letterSpacing.toString() }
       ]
       const flexLayoutElement: Element = { name: ElementName.FlexLayout, properties: flexLayoutProperties };
-      return formatStartTag(flexLayoutElement)  + formatEndTag(flexLayoutElement);
+      return flexLayoutElement//formatStartTag(flexLayoutElement)  + formatEndTag(flexLayoutElement);
 }
 
-function TranslateHorizontalStackLayoutElement(node : FrameNode) : string {
+function TranslateHorizontalStackLayoutElement(node : FrameNode) : Element {
     const horizontalStackLayoutProperties: Property[] = [
       { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
       { name: PropertyName.HeightRequest,     value: node.height.toString() },
@@ -48,10 +47,10 @@ function TranslateHorizontalStackLayoutElement(node : FrameNode) : string {
       //{ name: PropertyName.HorizontalOptions, value: node.letterSpacing.toString() }
     ]
     const horizontalStackLayoutElement: Element = { name: ElementName.HorizontalStackLayout, properties: horizontalStackLayoutProperties };
-    return formatStartTag(horizontalStackLayoutElement)  + formatEndTag(horizontalStackLayoutElement);
+    return horizontalStackLayoutElement;//formatStartTag(horizontalStackLayoutElement)  + formatEndTag(horizontalStackLayoutElement);
   }
   
-function TranslateVerticalStackLayoutElement(node : FrameNode) : string {
+function TranslateVerticalStackLayoutElement(node : FrameNode) : Element {
     const verticalStackLayoutProperties: Property[] = [
         { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
         { name: PropertyName.HeightRequest,     value: node.height.toString() },
@@ -61,7 +60,7 @@ function TranslateVerticalStackLayoutElement(node : FrameNode) : string {
         //{ name: PropertyName.HorizontalOptions, value: node.letterSpacing.toString() }
     ]
     const vertivalStackLayoutElement: Element = { name: ElementName.VerticalStackLayout, properties: verticalStackLayoutProperties };
-    return formatStartTag(vertivalStackLayoutElement)  + formatEndTag(vertivalStackLayoutElement);
+    return vertivalStackLayoutElement;//formatStartTag(vertivalStackLayoutElement)  + formatEndTag(vertivalStackLayoutElement);
 }
 
 function translateFigmaPaddingToXAMLPadding(node: FrameNode): string {

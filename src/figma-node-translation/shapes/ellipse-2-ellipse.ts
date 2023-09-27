@@ -1,8 +1,7 @@
 import { Element, ElementName } from "../../Element";
 import { Property, PropertyName } from "../../Property";
-import { formatEndTag, formatStartTag } from "../../XamlParser";
 
-export function TranslateEllipseElement(node: EllipseNode): string {
+export function TranslateEllipseElement(node: EllipseNode): Element {
     const ellipseProperties: Property[] = [
       { name: PropertyName.Width,   value: node.width.toString() },
       { name: PropertyName.Height,  value: node.height.toString() },
@@ -13,5 +12,5 @@ export function TranslateEllipseElement(node: EllipseNode): string {
     ];
   
     const ellipseElement: Element = { name: ElementName.Ellipse, properties: ellipseProperties };
-    return formatStartTag(ellipseElement) + formatEndTag(ellipseElement);
+    return ellipseElement;
   }
