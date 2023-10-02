@@ -1,5 +1,5 @@
 import { ParseFigma } from "./XamlParser";
-import { promises as fs } from 'fs';
+import  * as fs from 'fs';
 
 // src/plugin.ts
 figma.showUI(__html__, { width: 600, height: 400 });
@@ -61,7 +61,7 @@ const nodes: NestedNode[] = [
 
 let nodes2Parse: NestedNode[] = [];
 
-figma.ui.postMessage(nodes);
+figma.ui.postMessage({ type: 'init', nodes });
 
 figma.ui.onmessage = (message) => {
   console.log("got this from the UI", message);
@@ -101,11 +101,9 @@ figma.ui.onmessage = (message) => {
   
 
   const textContent = ParseFigma(nodes2Parse);
-  const fileName = 'textfile.txt';
 
-  (async () => {
-    await fs.writeFile(fileName, textContent, 'utf8');
-  })();
-  
+   figma.ui.postMessage({type: "fileInfo", textContent });
+
 }
+
 
