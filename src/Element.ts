@@ -8,6 +8,8 @@ export type Element = {
 export enum ElementName {
     Label,
     Button,
+    Editor,
+    Entry,
     StackFrame,
     TextBlock,
     TextBox,

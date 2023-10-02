@@ -15,16 +15,16 @@ export function TranslateFigmaFrameToXamlLayout(node : FrameNode) {
 
 function TranslateFlexLayoutElement(node : FrameNode) : Element {
     const flexLayoutProperties: Property[] = [
-        { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
+        { name: PropertyName.Spacing,           value: translateDefaultNumberValue(node.itemSpacing.toString()) },
         { name: PropertyName.HeightRequest,     value: node.height.toString() },
         { name: PropertyName.WidthRequest,      value: node.width.toString() },
-        { name: PropertyName.Padding,           value: translateFigmaPaddingToXAMLPadding(node) },
+        { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
         { name: PropertyName.AlignContent,      value: translateFigmaAlignContent(node.primaryAxisAlignItems) },
         { name: PropertyName.AlignItems,        value: translateFigmaAlignItemsToXamlAlignItems(node.primaryAxisAlignItems) },
         { name: PropertyName.Wrap,              value: translateFigmaWrapToXamlWrap(node.layoutWrap) },
-        { name: PropertyName.Grow,              value: node.layoutGrow.toString() },
-        { name: PropertyName.Shrink,            value: node.rescale.toString() },
+        { name: PropertyName.Grow,              value: translateDefaultNumberValue(node.layoutGrow.toString()) },
         { name: PropertyName.AlignSelf,         value: translateFigmaAlignItemsToXamlAlignItems(node.layoutAlign) },
+        //{ name: PropertyName.Shrink,            value: node.rescale.toString() },
         //{ name: PropertyName.Order,             value: node. },
         //{ name: PropertyName.Basis,             value:   },
         //{ name: PropertyName.Direction,         value: node.layoutMode },
@@ -37,12 +37,19 @@ function TranslateFlexLayoutElement(node : FrameNode) : Element {
       return flexLayoutElement//formatStartTag(flexLayoutElement)  + formatEndTag(flexLayoutElement);
 }
 
+function translateDefaultNumberValue(value : string): string {
+  if (value === '0') {
+    return 'None';
+  }
+  return value.toString();
+}
+
 function TranslateHorizontalStackLayoutElement(node : FrameNode) : Element {
     const horizontalStackLayoutProperties: Property[] = [
       { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
       { name: PropertyName.HeightRequest,     value: node.height.toString() },
       { name: PropertyName.WidthRequest,      value: node.width.toString() },
-      { name: PropertyName.Padding,           value: translateFigmaPaddingToXAMLPadding(node) },
+      { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
       //{ name: PropertyName.VerticalOptions,   value: node.primaryAxisAlignItems},
       //{ name: PropertyName.HorizontalOptions, value: node.letterSpacing.toString() }
     ]
@@ -55,7 +62,7 @@ function TranslateVerticalStackLayoutElement(node : FrameNode) : Element {
         { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
         { name: PropertyName.HeightRequest,     value: node.height.toString() },
         { name: PropertyName.WidthRequest,      value: node.width.toString() },
-        { name: PropertyName.Padding,           value: translateFigmaPaddingToXAMLPadding(node) },
+        { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
         //{ name: PropertyName.VerticalOptions,   value: node.primaryAxisAlignItems},
         //{ name: PropertyName.HorizontalOptions, value: node.letterSpacing.toString() }
     ]
@@ -90,7 +97,7 @@ function translateFigmaWrapToXamlWrap(value: string) {
             return 'Wrap'
         case 'NO_WRAP':
         default:
-            return 'NoWrap';
+            return 'None';
     }
 }
 
