@@ -4,6 +4,10 @@ export type Property = {
 }
 
 export enum PropertyName {
+    //Common
+    Width,
+    Height,
+
     //Label
     CharacterSpacing,
     FontAttributes,
@@ -26,6 +30,19 @@ export enum PropertyName {
     //Frame
     Spacing,
 
+    //FlexLayout
+    AlignContent,
+    AlignItems,
+    Direction,
+    JustifyContent,
+    Position,
+    Wrap,
+    AlignSelf,
+    Basis,
+    Grow,
+    Order,
+    Shrink,
+
     //Polygon
     Points,
     Fill,
@@ -33,9 +50,13 @@ export enum PropertyName {
     Stroke,
     StrokeThickness,
 
+    //Line
+    X1,
+    X2,
+    Y1,
+    Y2,
+
     FontAttribute,
-    Width,
-    Height,
     BackgroundColor,
     ForegroundColor,
     Margin,

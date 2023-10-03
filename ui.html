@@ -37,6 +37,10 @@
         .unfolded {
             display: block; /* Show children when unfolded */
         }
+        form * {
+            display: block;
+            margin: 10px;
+        }
     </style>
 </head>
 <body>
@@ -58,45 +62,54 @@
     </div>
 
 <script>
+
   onmessage = (event) => {
-            let data = event.data.pluginMessage;
-            console.log("got nested list from the code.js", data);
+    const data = event.data.pluginMessage;
+    console.log('data: ', data);
 
-            function createNodeElement(node) {
-                const listItem = document.createElement('li');
-                const nodeDiv = document.createElement('div');
-                nodeDiv.className = 'nodeDiv';
-                const textDiv = document.createElement('div');
-                const select = document.createElement('select');
+    if (data.type === 'init') {
+        const selectedValues = [];
+        function createNodeElement(node) {
+            const listItem = document.createElement('li');
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = 'nodeDiv';
+            const textDiv = document.createElement('div');
+            const select = document.createElement('select');
 
-                textDiv.textContent = node.parent.name;
-                nodeDiv.appendChild(textDiv);
+            textDiv.textContent = node.parent.name;
+            nodeDiv.appendChild(textDiv);
 
-                select.className = 'select';
-                select.innerHTML = `
-                    <div class="node-name">${node.parent.name}</div>
-                    <div>
-                        <select>
-                            <option value="" disabled selected>Select value</option>
-                            <option value="none">None</option>
-                            <option value="image">Image</option>
-                            <option value="label">Label</option>
-                            <option value="button">Button</option>
-                            <option value="image-button">ImageButton</option>
-                            <option value="swipe-view">SwipeView</option>
-                            <option value="check-box">CheckBox</option>
-                            <option value="slider">Slider</option>
-                            <option value="switch">Switch</option>
-                            <option value="editor">Editor</option>
-                            <option value="entry">Entry</option>
-                            <option value="list-view">ListView</option>
-                            <option value="table-view">TableView</option>
-                            <option value="menu-item">MenuItem</option>
-                            <option value="toolbar-item">ToolbarItem</option>
-                            <option value="display-pop-ups">Display Pop-ups</option>
-                        </select>
-                    </div>
-                    `;
+            select.className = 'select';
+            select.innerHTML = `
+                <div class="node-name">${node.parent.name}</div>
+                <div>
+                    <select>
+                        <option value="" disabled selected>Select value</option>
+                        <option value="none">None</option>
+                        <option value="image">Image</option>
+                        <option value="label">Label</option>
+                        <option value="button">Button</option>
+                        <option value="image-button">ImageButton</option>
+                        <option value="swipe-view">SwipeView</option>
+                        <option value="check-box">CheckBox</option>
+                        <option value="slider">Slider</option>
+                        <option value="switch">Switch</option>
+                        <option value="editor">Editor</option>
+                        <option value="entry">Entry</option>
+                        <option value="list-view">ListView</option>
+                        <option value="table-view">TableView</option>
+                        <option value="menu-item">MenuItem</option>
+                        <option value="toolbar-item">ToolbarItem</option>
+                        <option value="display-pop-ups">Display Pop-ups</option>
+                    </select>
+                </div>
+                `;
+
+                select.addEventListener('change', (event) => {
+                    const selectedValue = event.target.value;
+                    // Update the selectedValues array
+                    selectedValues.push({node, selectedValue});
+                });
 
                 nodeDiv.appendChild(select);
                 listItem.appendChild(nodeDiv);
@@ -117,18 +130,41 @@
                     textDiv.addEventListener('click', () => {
                         childrenList.classList.toggle('unfolded');
                     });
-                }
-
-                return listItem;
             }
 
-            const nodeList = document.getElementById("node-list");
-
-            data.forEach((node) => {
-                const nodeElement = createNodeElement(node);
-                nodeList.appendChild(nodeElement);
-            });
+            return listItem;
         }
+
+        const nodeList = document.getElementById("node-list");
+
+        data.nodes.forEach((node) => {
+            const nodeElement = createNodeElement(node);
+            nodeList.appendChild(nodeElement);
+        });  
+
+        const exportButton = document.getElementById("export-button");
+        exportButton.addEventListener('click', () => {
+            parent.postMessage({ pluginMessage: selectedValues }, '*')
+        });
+    } else if (data.type === "url") {
+        const fileName = 'textfile.txt';
+
+        download(fileName, 'Hello World!');
+    }
+
+    function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    }
+} 
 </script>
 </body>
 </html>
