@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Frame Example</title>
     <style>
+        /* .draggable_modal--positionedContainer--8AmbN{
+            width: 100%;
+            height: 100%;
+        } */
         .frame {
             width: 300px;
             height: 300px;
@@ -16,30 +20,51 @@
         }
         .popup-button {
             text-align: right;
+            margin-right: 15px;
         }
         .node {
             display: flex;
             align-items: center
         }
         .nodeDiv {
-            width: 90%;
+            width: -webkit-fill-available;
             display: flex;
             justify-content: space-between; 
             align-items: center; 
             margin-top: 4px;
+            margin-right: 10px;
             padding: 4px;
-            border-bottom: 1px #c7c7c7 solid;
+            
+        }
+        .select{
+            border-radius: 0.3rem;
         }
         .children {
-            margin-left: 8px; /* Add indentation for children */
             display: none; /* Initially hide children */
         }
         .unfolded {
             display: block; /* Show children when unfolded */
         }
-        form * {
-            display: block;
-            margin: 10px;
+        .button-bar{       
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end; 
+            padding: 20px;
+        }
+        #save-button{
+            color: white;
+            background-color: rgb(83, 88, 209);
+            border-radius: 0.5rem;
+            border: 2px solid rgb(83, 88, 209);
+        }
+        #export-button{
+            color: white;
+            background-color: rgb(75, 75, 75);
+            border-radius: 0.5rem;
+            border: 2px solid rgb(75, 75, 75);
+        }
+        hr{
+            width: 95%;
         }
     </style>
 </head>
@@ -54,6 +79,7 @@
         <ul id="node-list">
             <!-- JavaScript will populate this list -->
         </ul>
+        <hr>
 
         <div class="button-bar">
           <button class="button" id="save-button">Save</button>
@@ -106,8 +132,8 @@
                 `;
 
                 select.addEventListener('change', (event) => {
+                    
                     const selectedValue = event.target.value;
-                    // Update the selectedValues array
                     selectedValues.push({node, selectedValue});
                 });
 
@@ -130,7 +156,7 @@
                     textDiv.addEventListener('click', () => {
                         childrenList.classList.toggle('unfolded');
                     });
-            }
+                }
 
             return listItem;
         }
