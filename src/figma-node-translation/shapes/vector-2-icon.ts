@@ -3,8 +3,8 @@ import { Property, PropertyName } from "../../Property";
 
 export function TranslateVectorElement(node: VectorNode): Element {
     const vectorProperties: Property[] = [
-      { name: PropertyName.Width,           value: node.width.toString() },
-      { name: PropertyName.Height,          value: node.height.toString() },
+      { name: PropertyName.WidthRequest,           value: node.width.toString() },
+      { name: PropertyName.HeightRequest,          value: node.height.toString() },
       { name: PropertyName.Source,          value: translateSource(node) },
       // Add other ellipse-related properties as needed
     ];

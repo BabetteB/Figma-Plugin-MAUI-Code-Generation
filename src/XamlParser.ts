@@ -95,6 +95,7 @@ function checkNodeType(nn: NestedNode): string {
 
 function parseUtypeNodes(nn : NestedNode) : string {
   let node = nn.parent;
+  console.log('translating : ', node.utype)
   // Check the node's type using the 'type' property
   switch (node.utype) {
     case 'BUTTON':
@@ -123,6 +124,7 @@ function parseUtypeNodes(nn : NestedNode) : string {
 }
 
 export function ParseFigma(nodes: NestedNode[]) : string {
+  console.log('Parsing Nodes: ', nodes);
   let xamlCode = "";
   let rootnode = nodes[0];
   let contentPage = new ContentPage(rootnode.parent.node.name);
@@ -137,7 +139,15 @@ export function ParseFigma(nodes: NestedNode[]) : string {
   return xamlCode;
 }
 
-function formatStartTag(element: Element): string {
+function formatProperties(properties : Property[]) : string{
+  const propertyString = properties
+    .filter((prop) => (prop.value !== 'None')) // Exclude properties with value 'None' because then it is set to default value
+    .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
+    .join(" ");
+  return propertyString;
+}
+
+export function formatStartTag(element: Element): string {
   const propertyString = element.properties
     .filter((prop) => (prop.value !== 'None')) // Exclude properties with value 'None' because then it is set to default value
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
@@ -146,7 +156,7 @@ function formatStartTag(element: Element): string {
   return `<${ElementName[element.name]} ${propertyString}>` + newline();
 }
 
-function formatShortTag(element : Element): string {
+export function formatShortTag(element : Element): string {
   const propertyString = element.properties
     .filter((prop) => prop.value !== 'None') // Exclude properties with value 'None' because then it is set to default value
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
@@ -155,11 +165,89 @@ function formatShortTag(element : Element): string {
   return `<${ElementName[element.name]} ${propertyString}/>` + newline();
 }
 
-function formatEndTag(element: Element): string {
+export function formatEndTag(element: Element): string {
   return `</${ElementName[element.name]}>`;
 }
 
 function newline() : string {
   return `\n`
+}
+
+function backgroundToXaml(node : SceneNode){
+  let background = translateFillsToFigma(node);
+  
+  
+  
+
+}
+
+function translateFillsToFigma(node: SceneNode) {
+  let elements : {parent: Element, children: Element[]}[] = [];
+
+  if ('fills' in node) {
+    let xamlString = `.${ElementName.Background}`;
+
+    const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
+    if (fills && fills.length > 0) {
+        fills.forEach((fill) => {
+            if (fill.type === 'SOLID') {
+                // Handle Solid Paint
+                const solidPaint = fill as SolidPaint;
+                const color = `#${solidPaint.color.r}${solidPaint.color.g}${solidPaint.color.b}`;
+
+                let backgroundProp = { name: PropertyName.Background, value: color } as Property;
+
+                xamlString += `${formatProperties([backgroundProp])}/>`;
+
+            } else if (fill.type === 'GRADIENT_LINEAR') {
+                const gradientPaint = fill as GradientPaint;
+
+                let linearGradientBrushProp : Property[] = [
+                  {name: PropertyName.EndPoint, value: '1,0'}
+                ];
+                let linearGradientBrushElement : Element =
+                  {name : ElementName.LinearGradientBrush, properties: linearGradientBrushProp}
+
+                if (gradientPaint.gradientStops) {
+                  let gradProps = [] as Element[];
+                    gradientPaint.gradientStops.forEach(stop => {
+                        let gradProp : Property[]= [
+                          {name: PropertyName.OffSet, value: `${stop.position}`},
+                          {name: PropertyName.Color, value: `#${stop.color.r}${stop.color.g}${stop.color.b}`}
+                        ];
+                        gradProps.push({name: ElementName.GradientStop, properties: gradProp});
+                    });
+                  xamlString += `>\n${formatStartTag(linearGradientBrushElement)}`
+                }
+                
+            } else if (fill.type === 'GRADIENT_RADIAL') {
+              // Handle Gradient Paint (Linear or Radial)
+              const gradientPaint = fill as GradientPaint;
+
+              let radialGradientBrushProp : Property[] = [
+                {name: PropertyName.Center, value: '0.5, 0.5'},
+                {name: PropertyName.Radius, value: '0.5'}
+              ];
+              let radialGradientBrushElement : Element =
+                {name : ElementName.RadialGradientBrush, properties: radialGradientBrushProp};
+
+              if (gradientPaint.gradientStops) {
+                let gradProps = [] as Element[];
+                  gradientPaint.gradientStops.forEach(stop => {
+                      let gradProp : Property[]= [
+                        {name: PropertyName.OffSet, value: `${stop.position}`},
+                        {name: PropertyName.Color, value: `#${stop.color.r}${stop.color.g}${stop.color.b}`}
+                      ];
+                      let gradStop : Element = {name: ElementName.GradientStop, properties: gradProp};
+                      gradProps.push({name: ElementName.GradientStop, properties: gradProp});
+                  });
+                  elements.push({parent: radialGradientBrushElement, children: gradProps})
+
+              }
+            }
+        });
+    }
+  }
+
 }
 

@@ -15,6 +15,8 @@ export function TranslateFigmaFrameToXamlLayout(node : FrameNode) {
 
 function TranslateFlexLayoutElement(node : FrameNode) : Element {
     const flexLayoutProperties: Property[] = [
+      /* Determines whether this layer uses auto-layout to position its children. Defaults to "NONE". */
+      //layoutMode: 'NONE' | 'HORIZONTAL' | 'VERTICAL'
         { name: PropertyName.Spacing,           value: translateDefaultNumberValue(node.itemSpacing.toString()) },
         { name: PropertyName.HeightRequest,     value: node.height.toString() },
         { name: PropertyName.WidthRequest,      value: node.width.toString() },
@@ -24,14 +26,6 @@ function TranslateFlexLayoutElement(node : FrameNode) : Element {
         { name: PropertyName.Wrap,              value: translateFigmaWrapToXamlWrap(node.layoutWrap) },
         { name: PropertyName.Grow,              value: translateDefaultNumberValue(node.layoutGrow.toString()) },
         { name: PropertyName.AlignSelf,         value: translateFigmaAlignItemsToXamlAlignItems(node.layoutAlign) },
-        //{ name: PropertyName.Shrink,            value: node.rescale.toString() },
-        //{ name: PropertyName.Order,             value: node. },
-        //{ name: PropertyName.Basis,             value:   },
-        //{ name: PropertyName.Direction,         value: node.layoutMode },
-        //{ name: PropertyName.JustifyContent,    value: node. },
-        //{ name: PropertyName.Position,          value: node. },
-        //{ name: PropertyName.VerticalOptions,   value: node.primaryAxisAlignItems},
-        //{ name: PropertyName.HorizontalOptions, value: node.letterSpacing.toString() }
       ]
       const flexLayoutElement: Element = { name: ElementName.FlexLayout, properties: flexLayoutProperties };
       return flexLayoutElement//formatStartTag(flexLayoutElement)  + formatEndTag(flexLayoutElement);
@@ -50,8 +44,7 @@ function TranslateHorizontalStackLayoutElement(node : FrameNode) : Element {
       { name: PropertyName.HeightRequest,     value: node.height.toString() },
       { name: PropertyName.WidthRequest,      value: node.width.toString() },
       { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
-      //{ name: PropertyName.VerticalOptions,   value: node.primaryAxisAlignItems},
-      //{ name: PropertyName.HorizontalOptions, value: node.letterSpacing.toString() }
+
     ]
     const horizontalStackLayoutElement: Element = { name: ElementName.HorizontalStackLayout, properties: horizontalStackLayoutProperties };
     return horizontalStackLayoutElement;//formatStartTag(horizontalStackLayoutElement)  + formatEndTag(horizontalStackLayoutElement);
