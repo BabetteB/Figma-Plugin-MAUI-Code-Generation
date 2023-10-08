@@ -1,6 +1,5 @@
 import { Element, ElementName } from "./Element";
 import { Property, PropertyName } from "./Property";
-import { formatEndTag, formatProperties, formatShortTag, formatStartTag } from "./XamlParser";
 import { FigmaNode } from "./figmaNodeTypes";
 
 let borderElement = {name: ElementName.Border, properties: [] as Property[]};
