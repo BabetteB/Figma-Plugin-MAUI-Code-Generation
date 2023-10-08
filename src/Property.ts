@@ -4,6 +4,7 @@ export type Property = {
 }
 
 export enum PropertyName {
+    StrokeDashArray,
 
     //rectangle
     RadiusX,

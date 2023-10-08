@@ -29,7 +29,7 @@ function checkNodeType(nn: NestedNode): string {
       let nestedFrameNodes = '';
       nn.children.forEach(n => nestedFrameNodes += checkNodeType(n) + `\n`);
       let frameElement = TranslateFigmaFrameToXamlLayout(frameNode);
-      return formatStartTag(frameElement) + `\t${nestedFrameNodes}` + formatEndTag(frameElement);
+      return formatStartTag(frameElement) + `${translateFillsToFigma(frameElement.name.toString(), node)}` + `\t${nestedFrameNodes}` + formatEndTag(frameElement);
 
     case 'GROUP':
       let groupNode = node as GroupNode;
@@ -40,6 +40,7 @@ function checkNodeType(nn: NestedNode): string {
     case 'TEXT':
       let textNode = node as TextNode;
       let textElement = TranslateTextElement(textNode);
+      //color is set in textcolor property
       return formatShortTag(textElement);
 
     case 'ELLIPSE':
@@ -101,6 +102,14 @@ function parseUtypeNodes(nn : NestedNode) : string {
     case 'BUTTON':
       let buttonNode = node.node as SceneNode;
       let buttonElement = TranslateButtonElement(buttonNode);
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          if (n.parent.utype === ('TEXT' || 'IMAGE')) {
+
+          }
+        });
+        return formatStartTag(buttonElement)
+      }
       return formatShortTag(buttonElement);
 
     case 'EDITOR':
@@ -123,6 +132,81 @@ function parseUtypeNodes(nn : NestedNode) : string {
   }
 }
 
+function parseUtypeChildren(nn: NestedNode) : Element | CustomControl | ContentView | null{
+  if (nn.parent.utype !== 'None') {
+    //return parseUtypeNodes(nn);
+  } 
+  let node = nn.parent.node;
+  // Check the node's type using the 'type' property
+  switch (node.type) {
+    case 'FRAME':
+      let frameNode = node as FrameNode;
+      let nestedFrameNodes = '';
+      nn.children.forEach(n => nestedFrameNodes += parseUtypeChildren(n));
+      return TranslateFigmaFrameToXamlLayout(frameNode);
+
+    case 'GROUP':
+      let groupNode = node as GroupNode;
+      let nestedGroupNodes = '';
+      nn.children.forEach(n => nestedGroupNodes += checkNodeType(n) + `\n`);
+      //return nestedGroupNodes;
+
+    case 'TEXT':
+      let textNode = node as TextNode;
+      let textElement = TranslateTextElement(textNode);
+      //color is set in textcolor property
+      return textElement;
+
+    case 'ELLIPSE':
+      let ellipseNode = node as EllipseNode;
+      let ellipseElement = TranslateEllipseElement(ellipseNode);
+      return ellipseElement;
+
+    case 'LINE':
+      let lineNode = node as LineNode;
+      let lineElement = TranslateLineElement(lineNode);
+      return lineElement;
+
+    case 'RECTANGLE':
+      let rectangleNode = node as RectangleNode;
+      let rectangleElement = TranslateRectangleElement(rectangleNode); 
+      return rectangleElement;
+
+    case 'POLYGON':
+      let polygonNode = node as PolygonNode;
+      //return 'Polygon';
+
+    case 'INSTANCE':
+      let instanceNode = node as InstanceNode;
+      let bindings : Binding[] = [] //TODO: children
+      let customControl = new CustomControl(instanceNode.name, bindings);
+      return customControl;
+
+    case 'COMPONENT':
+      let componentNode = node as ComponentNode;
+      // TODO: Make new resource file / new window
+      let contentView = new ContentView(node.name);
+      let nestedComponent = '';
+      nn.children.forEach(n => nestedComponent += `\t${checkNodeType(n)}\n`);
+      return contentView;
+
+    //Are not getting castet 
+    case 'VECTOR':
+      let vectorNode = node as VectorNode;
+      let vectorElement = TranslateVectorElement(vectorNode); 
+      return vectorElement;
+
+    case 'STAR':
+      let starNode = node as StarNode;
+    case 'BOOLEAN_OPERATION':
+      let booleanOperationNode = node as BooleanOperationNode;
+    case 'SLICE':
+      let sliceNode = node as SliceNode;
+    default:
+      return null;
+  }
+}
+
 export function ParseFigma(nodes: NestedNode[]) : string {
   console.log('Parsing Nodes: ', nodes);
   let xamlCode = "";
@@ -139,7 +223,7 @@ export function ParseFigma(nodes: NestedNode[]) : string {
   return xamlCode;
 }
 
-function formatProperties(properties : Property[]) : string{
+export function formatProperties(properties : Property[]) : string{
   const propertyString = properties
     .filter((prop) => (prop.value !== 'None')) // Exclude properties with value 'None' because then it is set to default value
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
@@ -169,21 +253,7 @@ export function formatEndTag(element: Element): string {
   return `</${ElementName[element.name]}>`;
 }
 
-function newline() : string {
-  return `\n`
-}
-
-function backgroundToXaml(node : SceneNode){
-  let background = translateFillsToFigma(node);
-  
-  
-  
-
-}
-
-function translateFillsToFigma(node: SceneNode) {
-  let elements : {parent: Element, children: Element[]}[] = [];
-
+export function translateFillsToFigma(elementName : string, node: SceneNode) {
   if ('fills' in node) {
     let xamlString = `.${ElementName.Background}`;
 
@@ -217,7 +287,8 @@ function translateFillsToFigma(node: SceneNode) {
                         ];
                         gradProps.push({name: ElementName.GradientStop, properties: gradProp});
                     });
-                  xamlString += `>\n${formatStartTag(linearGradientBrushElement)}`
+                    let stopsString = gradProps.forEach(g => formatShortTag(g));
+                  xamlString += `>\n${formatStartTag(linearGradientBrushElement)}>${stopsString}${formatEndTag(linearGradientBrushElement)}`;
                 }
                 
             } else if (fill.type === 'GRADIENT_RADIAL') {
@@ -233,21 +304,26 @@ function translateFillsToFigma(node: SceneNode) {
 
               if (gradientPaint.gradientStops) {
                 let gradProps = [] as Element[];
-                  gradientPaint.gradientStops.forEach(stop => {
-                      let gradProp : Property[]= [
-                        {name: PropertyName.OffSet, value: `${stop.position}`},
-                        {name: PropertyName.Color, value: `#${stop.color.r}${stop.color.g}${stop.color.b}`}
-                      ];
-                      let gradStop : Element = {name: ElementName.GradientStop, properties: gradProp};
-                      gradProps.push({name: ElementName.GradientStop, properties: gradProp});
-                  });
-                  elements.push({parent: radialGradientBrushElement, children: gradProps})
-
-              }
+                gradientPaint.gradientStops.forEach(stop => {
+                    let gradProp : Property[]= [
+                      {name: PropertyName.OffSet, value: `${stop.position}`},
+                      {name: PropertyName.Color, value: `#${stop.color.r}${stop.color.g}${stop.color.b}`}
+                    ];
+                    gradProps.push({name: ElementName.GradientStop, properties: gradProp});
+                });
+                let stopsString = gradProps.forEach(g => formatShortTag(g));
+                xamlString += `>\n${formatStartTag(radialGradientBrushElement)}>${stopsString}${formatEndTag(radialGradientBrushElement)}`;
             }
-        });
+    }});
     }
+    return xamlString;
   }
-
+ return '';
 }
+
+function newline() : string {
+  return `\n`
+}
+
+
 

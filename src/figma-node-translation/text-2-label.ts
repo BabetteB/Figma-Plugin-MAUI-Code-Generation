@@ -1,5 +1,6 @@
 import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
+import { TranslateCommonProperties } from "../commonPropertyParser";
 
 export function TranslateTextElement(node: TextNode): Element {
     const textProperties: Property[] = [
@@ -18,7 +19,7 @@ export function TranslateTextElement(node: TextNode): Element {
   
     ];
   
-    const textElement: Element = { name: ElementName.Label, properties: textProperties };
+    const textElement: Element = { name: ElementName.Label, properties: textProperties.concat(TranslateCommonProperties(node)) };
     return textElement;
   }
 
@@ -99,7 +100,6 @@ export function TranslateTextElement(node: TextNode): Element {
     }
   }
 
-  
   function translateTextTruncationToLineBreakMode(figmaTextTruncation: string): string {
     //OBS ! Do not fulfill all LineBreakModes of Xaml. See following link for more info about LineBreakMode: https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.linebreakmode?view=net-maui-7.0
     switch (figmaTextTruncation) {
