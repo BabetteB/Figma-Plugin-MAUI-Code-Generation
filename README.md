@@ -38,6 +38,8 @@ Once you've installed the Figma Code Generation Plugin and made your design, her
 
 5. **Generate Code**: Once you're satisfied with your selections, press the "Export design" button within the plugin interface.
 
+6. **Screen shot**: When you have exported the code, please take a screen shot where alle the type declerations are viseble.
+
 ## Exporting Code
 
 After generating code snippets for your design elements, follow these steps to export the code:
