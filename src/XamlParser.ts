@@ -14,6 +14,9 @@ import { TranslateVectorElement } from "./figma-node-translation/shapes/vector-2
 import { TranslateButtonElement } from "./user-defined-types-translation/button-2-xaml";
 import { TranslateEditorElement } from "./user-defined-types-translation/editor-2-xaml";
 import { TranslateEntryElement } from "./user-defined-types-translation/entry-2-xaml";
+import { TranslateSliderElement } from "./user-defined-types-translation/slider-2-xaml";
+import { TranslateSwitchElement } from "./user-defined-types-translation/switch-2-xaml";
+import { TranslateCheckBoxElement } from "./user-defined-types-translation/checkBox-2-xaml";
 import { TranslateCollectionElement } from "./user-defined-types-translation/collection-2-xaml";
 import { type } from "os";
 import { TranslatePolygonElement } from "./figma-node-translation/shapes/polygon-2-polygon";
@@ -253,21 +256,21 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
       }
       return nestedCollection;
 
-    case 'CHECHBOX':
+    case 'CHECKBOX':
       let checkBoxNode = node.node as SceneNode;
-      let checkBoxElement = TranslateButtonElement(checkBoxNode);
+      let checkBoxElement = TranslateCheckBoxElement(checkBoxNode);
       let nestedCheckBox : NestedElements = {parent: checkBoxElement, children : []};
       return nestedCheckBox;
 
     case 'SWITCH':
       let switchNode = node.node as SceneNode;
-      let switchElement = TranslateButtonElement(switchNode);
+      let switchElement = TranslateSwitchElement(switchNode);
       let nestedSwitch: NestedElements = {parent: switchElement, children : []};
       return nestedSwitch;
 
-    case 'SWITCH':
+    case 'SLIDER':
       let sliderNode = node.node as SceneNode;
-      let sliderElement = TranslateButtonElement(sliderNode);
+      let sliderElement = TranslateSliderElement(sliderNode);
       let nestedSlider: NestedElements = {parent: sliderElement, children : []};
       return nestedSlider;
 

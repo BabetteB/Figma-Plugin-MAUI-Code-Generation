@@ -2,10 +2,10 @@ import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
 
 
-export function TranslateCollectionElement(node : SceneNode) : Element {
-    const listviewProperties: Property[] = [
+export function TranslateSwitchElement(node : SceneNode) : Element {
+    const switchProperties: Property[] = [
         { name: PropertyName.IsToggled,     value: "false" }
       ]
-      const listviewElement: Element = { name: ElementName.CollectionView, properties: listviewProperties };
-      return listviewElement;
+      const switchElement: Element = { name: ElementName.Switch, properties: switchProperties };
+      return switchElement;
 }

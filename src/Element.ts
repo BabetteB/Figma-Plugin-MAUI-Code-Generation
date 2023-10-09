@@ -28,6 +28,7 @@ export enum ElementName {
     ScrollViewer,
     ProgressBar,
     Slider,
+    Switch,
     TabControl,
     TabItem,
     Menu,

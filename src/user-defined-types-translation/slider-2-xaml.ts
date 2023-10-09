@@ -2,10 +2,10 @@ import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
 
 
-export function TranslateCollectionElement(node : SceneNode) : Element {
-    const listviewProperties: Property[] = [
+export function TranslateSliderElement(node : SceneNode) : Element {
+    const sliderProperties: Property[] = [
         { name: PropertyName.Maximum,     value: "10" }
       ]
-      const listviewElement: Element = { name: ElementName.CollectionView, properties: listviewProperties };
-      return listviewElement;
+      const sliderElement: Element = { name: ElementName.Slider, properties: sliderProperties };
+      return sliderElement;
 }

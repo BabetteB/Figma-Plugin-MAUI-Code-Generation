@@ -2,10 +2,10 @@ import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
 
 
-export function TranslateCollectionElement(node : SceneNode) : Element {
-    const listviewProperties: Property[] = [
+export function TranslateCheckBoxElement(node : SceneNode) : Element {
+    const checkBoxProperties: Property[] = [
         { name: PropertyName.IsChecked,     value: "false" }
       ]
-      const listviewElement: Element = { name: ElementName.CollectionView, properties: listviewProperties };
-      return listviewElement;
+      const checkBoxElement: Element = { name: ElementName.CheckBox, properties: checkBoxProperties };
+      return checkBoxElement;
 }
