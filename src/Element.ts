@@ -6,12 +6,6 @@ export type Element = {
 }
 
 export enum ElementName {
-    none,
-    Background,
-    LinearGradientBrush,
-    RadialGradientBrush,
-    GradientStop,
-    Shadow,
     Label,
     Button,
     Editor,
