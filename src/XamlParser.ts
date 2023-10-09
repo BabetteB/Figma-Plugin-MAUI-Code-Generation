@@ -180,6 +180,7 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
     case 'BUTTON':
       let buttonNode = node.node as SceneNode;
       let buttonElement = TranslateButtonElement(buttonNode);
+      
       let nestedButton : NestedElements = {parent: buttonElement, children : []};
 
       if (nn.children.length > 0) {
@@ -289,9 +290,8 @@ function formatEndTag(element: Element): string {
   return `</${ElementName[element.name]}>\n`;
 }
 
-function translateFillsToFigma(elementName : string, node: SceneNode) {
+function TranslateFillsToFigma(parentElementName : string, node: SceneNode, fill : boolean) : NestedElements | Property {
   if ('fills' in node) {
-    let xamlString = `.${ElementName.Background}`;
 
     const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
     if (fills && fills.length > 0) {
@@ -301,9 +301,11 @@ function translateFillsToFigma(elementName : string, node: SceneNode) {
                 const solidPaint = fill as SolidPaint;
                 const color = `#${solidPaint.color.r}${solidPaint.color.g}${solidPaint.color.b}`;
 
-                let backgroundProp = { name: PropertyName.Background, value: color } as Property;
+                if (fill) {
+                  return { name: PropertyName.Fill, value: color } as Property;
+                }
+                return { name: PropertyName.Background, value: color } as Property;
 
-                xamlString += `${formatProperties([backgroundProp])}/>`;
 
             } else if (fill.type === 'GRADIENT_LINEAR') {
                 const gradientPaint = fill as GradientPaint;
@@ -323,8 +325,7 @@ function translateFillsToFigma(elementName : string, node: SceneNode) {
                         ];
                         gradProps.push({name: ElementName.GradientStop, properties: gradProp});
                     });
-                    let stopsString = gradProps.forEach(g => formatShortTag(g));
-                  xamlString += `>\n${formatStartTag(linearGradientBrushElement)}>${stopsString}${formatEndTag(linearGradientBrushElement)}`;
+                    return {parent : linearGradientBrushElement, children : [gradProps]}
                 }
                 
             } else if (fill.type === 'GRADIENT_RADIAL') {
@@ -347,14 +348,13 @@ function translateFillsToFigma(elementName : string, node: SceneNode) {
                     ];
                     gradProps.push({name: ElementName.GradientStop, properties: gradProp});
                 });
-                let stopsString = gradProps.forEach(g => formatShortTag(g));
-                xamlString += `>\n${formatStartTag(radialGradientBrushElement)}>${stopsString}${formatEndTag(radialGradientBrushElement)}`;
+              return {parent : radialGradientBrushElement, children : [gradProps]}
             }
     }});
     }
-    return xamlString;
   }
- return '';
+  let element : Element = {name: ElementName.none, properties : []} 
+ return {parent : element, children : []};
 }
 
 
