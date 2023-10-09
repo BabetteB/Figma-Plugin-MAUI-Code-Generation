@@ -241,7 +241,7 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
 
       return nestedEntry;
 
-    case 'LISTVIEW':
+    case 'COLLECTION':
       let collectionNode = node.node as SceneNode;
       let collectionElement = TranslateCollectionElement(collectionNode);
       let nestedCollection : NestedElements = {parent: collectionElement, children : []};
@@ -251,8 +251,25 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
           nestedCollection.children.push(checkNodeType(n));
         });
       }
-
       return nestedCollection;
+
+    case 'CHECHBOX':
+      let checkBoxNode = node.node as SceneNode;
+      let checkBoxElement = TranslateButtonElement(checkBoxNode);
+      let nestedCheckBox : NestedElements = {parent: checkBoxElement, children : []};
+      return nestedCheckBox;
+
+    case 'SWITCH':
+      let switchNode = node.node as SceneNode;
+      let switchElement = TranslateButtonElement(switchNode);
+      let nestedSwitch: NestedElements = {parent: switchElement, children : []};
+      return nestedSwitch;
+
+    case 'SWITCH':
+      let sliderNode = node.node as SceneNode;
+      let sliderElement = TranslateButtonElement(sliderNode);
+      let nestedSlider: NestedElements = {parent: sliderElement, children : []};
+      return nestedSlider;
 
     default:
       let element = {name: ElementName.none, properties: []}
