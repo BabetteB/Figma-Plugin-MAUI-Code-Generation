@@ -1,6 +1,5 @@
 import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
-import { TranslateCommonProperties } from "../commonPropertyParser";
 
 export function TranslateTextElement(node: TextNode): Element {
     const textProperties: Property[] = [
@@ -16,10 +15,13 @@ export function TranslateTextElement(node: TextNode): Element {
       { name: PropertyName.TextColor,               value: getHexColorFromFill(node) ?? 'None'}, 
       { name: PropertyName.TextDecorations,         value: translateTextDecorationToXAML(node.textDecoration as string) || 'None' },
       { name: PropertyName.TextTransform,           value: translateTextCaseToXAML(node.textCase as string) || 'None' },
-  
+      //{ name: PropertyName.TextType,                value: 'Text' } // Set appropriately based on Figma properties
+      //{ name: PropertyName.Padding,                 value: '0' }, // Set appropriately based on Figma properties
+      //{ name: PropertyName.FontFamily,              value: node.fontName }, // Set appropriately based on Figma properties
+      //{ name: PropertyName.FormattedText,           value: '' }, // Set appropriately based on Figma properties
     ];
   
-    const textElement: Element = { name: ElementName.Label, properties: textProperties.concat(TranslateCommonProperties(node)) };
+    const textElement: Element = { name: ElementName.Label, properties: textProperties };
     return textElement;
   }
 
@@ -100,6 +102,7 @@ export function TranslateTextElement(node: TextNode): Element {
     }
   }
 
+  
   function translateTextTruncationToLineBreakMode(figmaTextTruncation: string): string {
     //OBS ! Do not fulfill all LineBreakModes of Xaml. See following link for more info about LineBreakMode: https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.linebreakmode?view=net-maui-7.0
     switch (figmaTextTruncation) {
