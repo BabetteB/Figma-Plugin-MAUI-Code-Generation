@@ -74,6 +74,7 @@ function formatNestedElement(element: NestedElements): string {
   return result;
 }
 
+
 function checkNodeType(nn: NestedNode): NestedElements {
   //Check if the node has been assigned a custom value
   if (nn.parent.utype !== 'None') {
