@@ -6,6 +6,8 @@ export type Element = {
 }
 
 export enum ElementName {
+    none,
+    CollectionView,
     Background,
     LinearGradientBrush,
     RadialGradientBrush,
@@ -19,8 +21,6 @@ export enum ElementName {
     TextBlock,
     TextBox,
     ComboBox,
-    ListBox,
-    ListView,
     RadioButton,
     CheckBox,
     Image,
