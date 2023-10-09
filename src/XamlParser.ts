@@ -14,7 +14,7 @@ import { TranslateVectorElement } from "./figma-node-translation/shapes/vector-2
 import { TranslateButtonElement } from "./user-defined-types-translation/button-2-xaml";
 import { TranslateEditorElement } from "./user-defined-types-translation/editor-2-xaml";
 import { TranslateEntryElement } from "./user-defined-types-translation/entry-2-xaml";
-import { TranslateListViewElement } from "./user-defined-types-translation/listview-2-xaml";
+import { TranslateCollectionElement } from "./user-defined-types-translation/collection-2-xaml";
 import { type } from "os";
 import { TranslatePolygonElement } from "./figma-node-translation/shapes/polygon-2-polygon";
 
@@ -53,6 +53,9 @@ function formatNestedElement(element: NestedElements): string {
     result += element.parent.getStartTag() + /*`\n${nestedComponent}` +*/ element.parent.getEndTag();
 
   } else {
+    if (element.parent.name === ElementName.none) {
+      return '';
+    }
     if (element.children.length > 0) {
       // Start tag
       result += formatStartTag(element.parent);
@@ -62,10 +65,7 @@ function formatNestedElement(element: NestedElements): string {
         result += formatNestedElement(c);
       })
 
-      // End tag (only if the element isn't self-closing)
-      if (element.parent.name !== ElementName.none && element.children.length > 0) {
-        result += formatEndTag(element.parent);
-      }
+      result += formatEndTag(element.parent);
     } else {
       result += formatShortTag(element.parent);
     }
@@ -210,8 +210,8 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
         nn.children.forEach ( n => {
           let childNode = n.parent.node;
           if (childNode.type === 'TEXT') {
-            let textElement = TranslateTextElement(childNode as TextNode);
-            editorElement.properties.concat(textElement.properties);
+            let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
+            editorElement.properties.push(placeholderProp);
           } else {
             nestedEditor.children.push(checkNodeType(n));
           }
@@ -229,8 +229,8 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
         nn.children.forEach ( n => {
           let childNode = n.parent.node;
           if (childNode.type === 'TEXT') {
-            let textElement = TranslateTextElement(childNode as TextNode);
-            entryElement.properties.concat(textElement.properties);
+            let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
+            editorElement.properties.push(placeholderProp);
           } else {
             nestedEntry.children.push(checkNodeType(n));
           }
@@ -240,8 +240,8 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
       return nestedEntry;
 
     case 'LISTVIEW':
-      let listViewNode = node.node as SceneNode;
-      let collectionElement = TranslateListViewElement(listViewNode);
+      let collectionNode = node.node as SceneNode;
+      let collectionElement = TranslateCollectionElement(collectionNode);
       let nestedCollection : NestedElements = {parent: collectionElement, children : []};
 
       if (nn.children.length > 0) {

@@ -1,66 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frame Example</title>
-    <style>
-        .frame {
-            width: 300px;
-            height: 300px;
-            border: 1px solid #ccc;
-            padding: 20px;
-        }
-        h1 {
-            text-align: left;
-        }
-        .popup-button {
-            text-align: right;
-        }
-        .node {
-            display: flex;
-            align-items: center
-        }
-        .nodeDiv {
-            width: 90%;
-            display: flex;
-            justify-content: space-between; 
-            align-items: center; 
-            margin-top: 4px;
-            padding: 4px;
-            border-bottom: 1px #c7c7c7 solid;
-        }
-        .children {
-            margin-left: 8px; /* Add indentation for children */
-            display: none; /* Initially hide children */
-        }
-        .unfolded {
-            display: block; /* Show children when unfolded */
-        }
-        form * {
-            display: block;
-            margin: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div>
-        <h3>Figma Design 2 .NET MAUI Code Generator</h3>
-
-        <div class="popup-button">
-            <a href="#" id="popup-link">How 2 use?</a>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Figma 2 Maui</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f5f7;
+                padding: 20px;
+            }
+    
+            h3 {
+                color: #333;
+                border-bottom: 2px solid #dcdde1;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }
+    
+            .popup-button {
+                text-align: right;
+                margin-bottom: 20px;
+            }
+    
+            #popup-link {
+                color: #007BFF;
+                text-decoration: none;
+                transition: color 0.3s;
+            }
+    
+            #popup-link:hover {
+                color: #0056b3;
+            }
+    
+            .nodeDiv {
+                background-color: #fff;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                border-radius: 5px;
+                width: 90%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 4px;
+                padding: 10px;
+            }
+    
+            .children {
+                margin-left: 20px; /* Add indentation for children */
+                display: none; /* Initially hide children */
+            }
+    
+            .unfolded {
+                display: block; /* Show children when unfolded */
+            }
+    
+            .node-name {
+                font-weight: bold;
+                color: #333;
+                margin-right: 10px;
+            }
+    
+            .button-bar {
+                margin-top: 20px;
+                display: flex;
+                justify-content: space-between;
+            }
+    
+            .button {
+                background-color: #007BFF;
+                color: #fff;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+    
+            .button:hover {
+                background-color: #0056b3;
+            }
+    
+            #downloadLink {
+                background-color: #28a745;
+                color: #fff;
+                padding: 10px 20px;
+                border-radius: 5px;
+                text-decoration: none;
+                transition: background-color 0.3s;
+            }
+    
+            #downloadLink:hover {
+                background-color: #218838;
+            }
+    
+            select {
+                padding: 5px 10px;
+                border: 1px solid #dcdde1;
+                border-radius: 5px;
+                background-color: #f4f5f7;
+            }
+    
+            form * {
+                display: block;
+                margin: 10px;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div>
+            <h3>Figma Design 2 .NET MAUI Code Generator</h3>
+    
+            <div class="popup-button">
+                <a href="#" id="popup-link">How 2 use?</a>
+            </div>
+    
+            <ul id="node-list">
+                <!-- JavaScript will populate this list -->
+            </ul>
+    
+            <div class="button-bar">
+                <button class="button" id="save-button">Save</button>
+                <button class="button" id="export-button">Export Design</button>
+                <a id="downloadLink" style="display: none;">Download Code</a>
+            </div>
         </div>
-
-        <ul id="node-list">
-            <!-- JavaScript will populate this list -->
-        </ul>
-
-        <div class="button-bar">
-          <button class="button" id="save-button">Save</button>
-          <button class="button" id="export-button">Export Design</button>
-          <a id="downloadLink" style="display: none;">Download Code</a>
-        </div>
-    </div>
 
 <script>
 
@@ -142,8 +206,8 @@
         });
     } 
     else if (data.type === 'fileInfo') {
-        console.log(data.textContent);
-        //downloadCode(data.textContent);
+        //console.log(data.textContent);
+        downloadCode(data.textContent);
     }
 
     function downloadCode(generatedCode) {
