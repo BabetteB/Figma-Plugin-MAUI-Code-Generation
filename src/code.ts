@@ -69,25 +69,25 @@ figma.ui.onmessage = (message) => {
 
   function updateDisplayNodeUType(selection: NestedNode[], message: { node: NestedNode; selectedValue: string }[]): NestedNode[] {
     // Create a mapping of BaseNode.id to selectedValue
-  const selectedValueMap: Record<string, string> = {};
-  message.forEach((item) => {
-    selectedValueMap[item.node.parent.node.id] = item.selectedValue;
-  });
+    const selectedValueMap: Record<string, string> = {};
+    message.forEach((item) => {
+      selectedValueMap[item.node.parent.node.id] = item.selectedValue;
+    });
 
-  // Create a new array to hold the updated selection
-  const updatedSelection: NestedNode[] = [];
+    // Create a new array to hold the updated selection
+    const updatedSelection: NestedNode[] = [];
 
-  // Recursive function to update nodes
-  function updateChildren(node: NestedNode): NestedNode {
-    const selectedValue = selectedValueMap[node.parent.node.id];
-    if (selectedValue !== undefined) {
-      // Create a new node with updated utype
-      const updatedParent = { ...node.parent, utype: selectedValue };
-      return { parent: updatedParent, children: node.children.map((child) => updateChildren(child)) };
-    } else {
-      // If no update is needed, return the original node
-      return { parent: node.parent, children: node.children.map((child) => updateChildren(child)) };
-    }
+    // Recursive function to update nodes
+    function updateChildren(node: NestedNode): NestedNode {
+      const selectedValue = selectedValueMap[node.parent.node.id];
+      if (selectedValue !== undefined) {
+        // Create a new node with updated utype
+        const updatedParent = { ...node.parent, utype: selectedValue };
+        return { parent: updatedParent, children: node.children.map((child) => updateChildren(child)) };
+      } else {
+        // If no update is needed, return the original node
+        return { parent: node.parent, children: node.children.map((child) => updateChildren(child)) };
+      }
   }
 
   // Iterate through the selection and update nodes based on the message
@@ -99,10 +99,9 @@ figma.ui.onmessage = (message) => {
   return updatedSelection;
   }
   
-
   const textContent = ParseFigma(nodes2Parse);
 
-   figma.ui.postMessage({type: "fileInfo", textContent });
+  figma.ui.postMessage({type: "fileInfo", textContent });
 
 }
 

@@ -2,15 +2,14 @@ import { Element, ElementName } from "../../Element";
 import { Property, PropertyName } from "../../Property";
 import { TranslateCommonProperties } from "../../commonPropertyParser";
 
-export function TranslateEllipseElement(node: EllipseNode): Element {
-
-  const ellipseProperties: Property[] = [
+export function TranslatePolygonElement(node: PolygonNode): Element {
+  const polygonProperties: Property[] = [
     { name: PropertyName.Fill,    value: node.fills.toString() },
     { name: PropertyName.StrokeThickness,  value: node.strokeWeight.toString()},
     { name: PropertyName.Stroke,  value: translateFillsToFigma(node) ?? 'None'},
   ];
 
-  const ellipseElement: Element = { name: ElementName.Ellipse, properties: ellipseProperties.concat(TranslateCommonProperties(node)) };
+  const ellipseElement: Element = { name: ElementName.Ellipse, properties: polygonProperties.concat(TranslateCommonProperties(node)) };
   return ellipseElement;
 }
 

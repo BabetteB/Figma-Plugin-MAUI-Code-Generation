@@ -4,9 +4,31 @@ export type Property = {
 }
 
 export enum PropertyName {
+    StrokeDashArray,
+
+    //rectangle
+    RadiusX,
+    RadiusY,
+
+    // vector?
+    Center,
+    EndPoint,
+    Color,
+
+    //Shadow
+    Brush,
+    OffSet,
+    Radius,
+
     //Common
-    Width,
-    Height,
+    VerticalOptions,
+    HorizontalOptions,
+    Background,
+    //Margin is not possible to have on a figma node
+
+    //Button
+    BorderWidth,
+    ContentLayout,
 
     //Label
     CharacterSpacing,
@@ -56,10 +78,12 @@ export enum PropertyName {
     Y1,
     Y2,
 
+    //Border
+    StrokeShape,
+
     FontAttribute,
-    BackgroundColor,
+    
     ForegroundColor,
-    Margin,
     BorderColor,
     BorderThickness,
     Visibility,
@@ -202,8 +226,6 @@ export enum PropertyName {
     MaxTopRevealed,
     ContentTemplate,
     ContentTemplateSelector,
-    HorizontalOptions,
-    VerticalOptions,
     Rotation,
     Scale,
     TranslationX,
@@ -221,7 +243,6 @@ export enum PropertyName {
     ScaleX,
     ScaleY,
     PlatformConfiguration,
-    MarginConstraints,
     GestureRecognizers,
     Behavior,
     Triggers,
@@ -249,7 +270,6 @@ export enum PropertyName {
     IsVisibleWidthRequest,
     IsVisibleMinimumHeightRequest,
     IsVisibleMinimumWidthRequest,
-    IsVisibleMargin,
     IsVisiblePaddingConstraints,
     IsVisibleRowSpacing,
     IsVisibleColumnSpacing,
@@ -266,7 +286,6 @@ export enum PropertyName {
     IsVisibleWidthRequestOpacity,
     IsVisibleMinimumHeightRequestOpacity,
     IsVisibleMinimumWidthRequestOpacity,
-    IsVisibleMarginOpacity,
     IsVisiblePaddingConstraintsOpacity,
     IsVisibleRowSpacingOpacity,
     IsVisibleColumnSpacingOpacity,
@@ -292,7 +311,6 @@ export enum PropertyName {
     IsVisibleWidthRequestRotation,
     IsVisibleMinimumHeightRequestRotation,
     IsVisibleMinimumWidthRequestRotation,
-    IsVisibleMarginRotation,
     IsVisiblePaddingConstraintsRotation,
     IsVisibleRowSpacingRotation,
     IsVisibleColumnSpacingRotation,
@@ -316,7 +334,6 @@ export enum PropertyName {
     IsVisibleWidthRequestScale,
     IsVisibleMinimumHeightRequestScale,
     IsVisibleMinimumWidthRequestScale,
-    IsVisibleMarginScale,
     IsVisiblePaddingConstraintsScale,
     IsVisibleRowSpacingScale,
     IsVisibleColumnSpacingScale,
@@ -341,7 +358,6 @@ export enum PropertyName {
     IsVisibleWidthRequestScaleX,
     IsVisibleMinimumHeightRequestScaleX,
     IsVisibleMinimumWidthRequestScaleX,
-    IsVisibleMarginScaleX,
     IsVisiblePaddingConstraintsScaleX,
     IsVisibleRowSpacingScaleX,
     IsVisibleColumnSpacingScaleX,
@@ -366,7 +382,6 @@ export enum PropertyName {
     IsVisibleWidthRequestScaleY,
     IsVisibleMinimumHeightRequestScaleY,
     IsVisibleMinimumWidthRequestScaleY,
-    IsVisibleMarginScaleY,
     IsVisiblePaddingConstraintsScaleY,
     IsVisibleRowSpacingScaleY,
     IsVisibleColumnSpacingScaleY,
@@ -391,7 +406,6 @@ export enum PropertyName {
     IsVisibleWidthRequestTranslationX,
     IsVisibleMinimumHeightRequestTranslationX,
     IsVisibleMinimumWidthRequestTranslationX,
-    IsVisibleMarginTranslationX,
     IsVisiblePaddingConstraintsTranslationX,
     IsVisibleRowSpacingTranslationX,
     IsVisibleColumnSpacingTranslationX,
@@ -416,7 +430,6 @@ export enum PropertyName {
     IsVisibleWidthRequestTranslationY,
     IsVisibleMinimumHeightRequestTranslationY,
     IsVisibleMinimumWidthRequestTranslationY,
-    IsVisibleMarginTranslationY,
     IsVisiblePaddingConstraintsTranslationY,
     IsVisibleRowSpacingTranslationY,
     IsVisibleColumnSpacingTranslationY,
@@ -441,7 +454,6 @@ export enum PropertyName {
     IsVisibleWidthRequestLayoutX,
     IsVisibleMinimumHeightRequestLayoutX,
     IsVisibleMinimumWidthRequestLayoutX,
-    IsVisibleMarginLayoutX,
     IsVisiblePaddingConstraintsLayoutX,
     IsVisibleRowSpacingLayoutX,
     IsVisibleColumnSpacingLayoutX,
@@ -466,7 +478,6 @@ export enum PropertyName {
     IsVisibleWidthRequestLayoutY,
     IsVisibleMinimumHeightRequestLayoutY,
     IsVisibleMinimumWidthRequestLayoutY,
-    IsVisibleMarginLayoutY,
     IsVisiblePaddingConstraintsLayoutY,
     IsVisibleRowSpacingLayoutY,
     IsVisibleColumnSpacingLayoutY,
@@ -491,7 +502,6 @@ export enum PropertyName {
     IsVisibleWidthRequestWidthRequest,
     IsVisibleMinimumHeightRequestWidthRequest,
     IsVisibleMinimumWidthRequestWidthRequest,
-    IsVisibleMarginWidthRequest,
     IsVisiblePaddingConstraintsWidthRequest,
     IsVisibleRowSpacingWidthRequest,
     IsVisibleColumnSpacingWidthRequest,
@@ -516,7 +526,6 @@ export enum PropertyName {
     IsVisibleWidthRequestHeightRequest,
     IsVisibleMinimumHeightRequestHeightRequest,
     IsVisibleMinimumWidthRequestHeightRequest,
-    IsVisibleMarginHeightRequest,
     IsVisiblePaddingConstraintsHeightRequest,
     IsVisibleRowSpacingHeightRequest,
     IsVisibleColumnSpacingHeightRequest,
@@ -541,7 +550,6 @@ export enum PropertyName {
     IsVisibleWidthRequestMinimumHeightRequest,
     IsVisibleMinimumHeightRequestMinimumHeightRequest,
     IsVisibleMinimumWidthRequestMinimumHeightRequest,
-    IsVisibleMarginMinimumHeightRequest,
     IsVisiblePaddingConstraintsMinimumHeightRequest,
     IsVisibleRowSpacingMinimumHeightRequest,
     IsVisibleColumnSpacingMinimumHeightRequest,
@@ -566,7 +574,6 @@ export enum PropertyName {
     IsVisibleWidthRequestMinimumWidthRequest,
     IsVisibleMinimumHeightRequestMinimumWidthRequest,
     IsVisibleMinimumWidthRequestMinimumWidthRequest,
-    IsVisibleMarginMinimumWidthRequest,
     IsVisiblePaddingConstraintsMinimumWidthRequest,
     IsVisibleRowSpacingMinimumWidthRequest,
     IsVisibleColumnSpacingMinimumWidthRequest,
@@ -591,7 +598,6 @@ export enum PropertyName {
     IsVisibleWidthRequestAnchorX,
     IsVisibleMinimumHeightRequestAnchorX,
     IsVisibleMinimumWidthRequestAnchorX,
-    IsVisibleMarginAnchorX,
     IsVisiblePaddingConstraintsAnchorX,
     IsVisibleRowSpacingAnchorX,
     IsVisibleColumnSpacingAnchorX,
@@ -616,7 +622,6 @@ export enum PropertyName {
     IsVisibleWidthRequestAnchorY,
     IsVisibleMinimumHeightRequestAnchorY,
     IsVisibleMinimumWidthRequestAnchorY,
-    IsVisibleMarginAnchorY,
     IsVisiblePaddingConstraintsAnchorY,
     IsVisibleRowSpacingAnchorY,
     IsVisibleColumnSpacingAnchorY,
@@ -641,7 +646,6 @@ export enum PropertyName {
     IsVisibleWidthRequestRotationX,
     IsVisibleMinimumHeightRequestRotationX,
     IsVisibleMinimumWidthRequestRotationX,
-    IsVisibleMarginRotationX,
     IsVisiblePaddingConstraintsRotationX,
     IsVisibleRowSpacingRotationX,
     IsVisibleColumnSpacingRotationX,
@@ -666,7 +670,6 @@ export enum PropertyName {
     IsVisibleWidthRequestRotationY,
     IsVisibleMinimumHeightRequestRotationY,
     IsVisibleMinimumWidthRequestRotationY,
-    IsVisibleMarginRotationY,
     IsVisiblePaddingConstraintsRotationY,
     IsVisibleRowSpacingRotationY,
     IsVisibleColumnSpacingRotationY,

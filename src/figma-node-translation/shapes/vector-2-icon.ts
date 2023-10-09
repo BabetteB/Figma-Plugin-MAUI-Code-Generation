@@ -1,18 +1,16 @@
 import { Element, ElementName } from "../../Element";
 import { Property, PropertyName } from "../../Property";
+import { TranslateCommonProperties } from "../../commonPropertyParser";
 
 export function TranslateVectorElement(node: VectorNode): Element {
     const vectorProperties: Property[] = [
-      { name: PropertyName.Width,           value: node.width.toString() },
-      { name: PropertyName.Height,          value: node.height.toString() },
       { name: PropertyName.Source,          value: translateSource(node) },
-      // Add other ellipse-related properties as needed
     ];
   
-    const vectorElement: Element = { name: ElementName.Image, properties: vectorProperties };
+    const vectorElement: Element = { name: ElementName.Image, properties: vectorProperties.concat(TranslateCommonProperties(node)) };
     return vectorElement;
   }
 
 function translateSource(node : VectorNode) : string {
-    return `${node.name}.png`
+    return `${node.name.toLowerCase}.png`
 }

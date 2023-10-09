@@ -84,6 +84,7 @@
         <div class="button-bar">
           <button class="button" id="save-button">Save</button>
           <button class="button" id="export-button">Export Design</button>
+          <a id="downloadLink" style="display: none;">Download Code</a>
         </div>
     </div>
 
@@ -112,21 +113,14 @@
                     <select>
                         <option value="" disabled selected>Select value</option>
                         <option value="none">None</option>
-                        <option value="image">Image</option>
-                        <option value="label">Label</option>
-                        <option value="button">Button</option>
-                        <option value="image-button">ImageButton</option>
+                        <option value="BUTTON">Button</option>
                         <option value="swipe-view">SwipeView</option>
                         <option value="check-box">CheckBox</option>
                         <option value="slider">Slider</option>
                         <option value="switch">Switch</option>
                         <option value="editor">Editor</option>
                         <option value="entry">Entry</option>
-                        <option value="list-view">ListView</option>
-                        <option value="table-view">TableView</option>
-                        <option value="menu-item">MenuItem</option>
-                        <option value="toolbar-item">ToolbarItem</option>
-                        <option value="display-pop-ups">Display Pop-ups</option>
+                        <option value="collection">Collection</option>
                     </select>
                 </div>
                 `;
@@ -172,24 +166,32 @@
         exportButton.addEventListener('click', () => {
             parent.postMessage({ pluginMessage: selectedValues }, '*')
         });
-    } else if (data.type === "url") {
-        const fileName = 'textfile.txt';
-
-        download(fileName, 'Hello World!');
+    } 
+    else if (data.type === 'fileInfo') {
+        console.log(data.textContent);
+        //downloadCode(data.textContent);
     }
 
-    function download(filename, text) {
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-        element.setAttribute('download', filename);
+    function downloadCode(generatedCode) {
+        const blob = new Blob([generatedCode], { type: 'text/plain' });
 
-        element.style.display = 'none';
-        document.body.appendChild(element);
+        // Create a URL for the Blob
+        const url = window.URL.createObjectURL(blob);
 
-        element.click();
+        // Create a download link
+        const downloadLink = document.getElementById('downloadLink');
+        downloadLink.href = url;
+        downloadLink.download = 'generated_code.txt';
 
-        document.body.removeChild(element);
+        // Display the download link and trigger the download
+        downloadLink.style.display = 'block';
+        downloadLink.click();
+
+        // Clean up the URL and hide the link
+        window.URL.revokeObjectURL(url);
+        downloadLink.style.display = 'none';
     }
+    
 } 
 </script>
 </body>
