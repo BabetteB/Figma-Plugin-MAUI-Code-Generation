@@ -151,21 +151,28 @@
                     <select>
                         <option value="" disabled selected>Select value</option>
                         <option value="none">None</option>
-                        <option value="BUTTON">Button</option>
+                        <option value="image">Image</option>
+                        <option value="label">Label</option>
+                        <option value="button">Button</option>
+                        <option value="image-button">ImageButton</option>
                         <option value="swipe-view">SwipeView</option>
                         <option value="check-box">CheckBox</option>
                         <option value="slider">Slider</option>
                         <option value="switch">Switch</option>
                         <option value="editor">Editor</option>
                         <option value="entry">Entry</option>
-                        <option value="collection">Collection</option>
+                        <option value="list-view">ListView</option>
+                        <option value="table-view">TableView</option>
+                        <option value="menu-item">MenuItem</option>
+                        <option value="toolbar-item">ToolbarItem</option>
+                        <option value="display-pop-ups">Display Pop-ups</option>
                     </select>
                 </div>
                 `;
 
                 select.addEventListener('change', (event) => {
+                    
                     const selectedValue = event.target.value;
-                    // Update the selectedValues array
                     selectedValues.push({node, selectedValue});
                 });
 
@@ -188,7 +195,7 @@
                     textDiv.addEventListener('click', () => {
                         childrenList.classList.toggle('unfolded');
                     });
-            }
+                }
 
             return listItem;
         }
@@ -210,26 +217,21 @@
         downloadCode(data.textContent);
     }
 
-    function downloadCode(generatedCode) {
-        const blob = new Blob([generatedCode], { type: 'text/plain' });
-
-        // Create a URL for the Blob
-        const url = window.URL.createObjectURL(blob);
-
-        // Create a download link
-        const downloadLink = document.getElementById('downloadLink');
-        downloadLink.href = url;
-        downloadLink.download = 'generated_code.txt';
-
-        // Display the download link and trigger the download
-        downloadLink.style.display = 'block';
-        downloadLink.click();
-
-        // Clean up the URL and hide the link
-        window.URL.revokeObjectURL(url);
-        downloadLink.style.display = 'none';
+        download(fileName, 'Hello World!');
     }
-    
+
+    function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    }
 } 
 </script>
 </body>

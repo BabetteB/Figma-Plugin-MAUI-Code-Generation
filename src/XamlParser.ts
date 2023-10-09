@@ -79,102 +79,80 @@ function checkNodeType(nn: NestedNode): NestedElements {
   if (nn.parent.utype !== 'None') {
     return parseUtypeNodes(nn);
   } 
-
-  // take the top node
   let node = nn.parent.node;
-
   // Check the node's type using the 'type' property
   switch (node.type) {
     case 'FRAME':
-      // Create frame element -> becaomes a xaml layout element 
       let frameNode = node as FrameNode;
+      let nestedFrameNodes = '';
+      nn.children.forEach(n => nestedFrameNodes += checkNodeType(n) + `\n`);
       let frameElement = TranslateFigmaFrameToXamlLayout(frameNode);
-
-      let nestedFrame : NestedElements = {parent: frameElement, children : []};
-      nn.children.forEach(n => nestedFrame.children.push(checkNodeType(n)));
-   
-      return nestedFrame;
+      return formatStartTag(frameElement) + `\t${nestedFrameNodes}` + formatEndTag(frameElement);
 
     case 'GROUP':
-      let groupElement : Element = {name: ElementName.none, properties: []};
-
-      let nestedGroup : NestedElements = {parent: groupElement, children : []};
-      nn.children.forEach(n => nestedGroup.children.push(checkNodeType(n)));
-
-      return nestedGroup;
+      let groupNode = node as GroupNode;
+      let nestedGroupNodes = '';
+      nn.children.forEach(n => nestedGroupNodes += checkNodeType(n) + `\n`);
+      return nestedGroupNodes;
 
     case 'TEXT':
       let textNode = node as TextNode;
       let textElement = TranslateTextElement(textNode);
-
-      let nestedText : NestedElements = {parent: textElement, children : []};
-
-      return nestedText;
+      return formatShortTag(textElement);
 
     case 'ELLIPSE':
       let ellipseNode = node as EllipseNode;
       let ellipseElement = TranslateEllipseElement(ellipseNode);
-      let nestedElipse : NestedElements = {parent: ellipseElement, children : []};
-
-      return nestedElipse;
+      return formatShortTag(ellipseElement);
 
     case 'LINE':
       let lineNode = node as LineNode;
       let lineElement = TranslateLineElement(lineNode);
-      let nestedLine : NestedElements = {parent: lineElement, children : []};
-
-      return nestedLine;
+      return formatShortTag(lineElement);
 
     case 'RECTANGLE':
       let rectangleNode = node as RectangleNode;
       let rectangleElement = TranslateRectangleElement(rectangleNode); 
-      let nestedRectangle : NestedElements = {parent: rectangleElement, children : []};
-
-      return nestedRectangle;
+      return formatShortTag(rectangleElement);
 
     case 'POLYGON':
       let polygonNode = node as PolygonNode;
-      let polygonElement = TranslatePolygonElement(polygonNode); 
-      let nestedPolygon : NestedElements = {parent: polygonElement, children : []};
-
-      return nestedPolygon;
-
-    case 'VECTOR':
-      let vectorNode = node as VectorNode;
-      let vectorElement = TranslateVectorElement(vectorNode); 
-      let nestedVector : NestedElements = {parent: vectorElement, children : []};
-
-      return nestedVector;
+      return 'Polygon';
 
     case 'INSTANCE':
       let instanceNode = node as InstanceNode;
       let bindings : Binding[] = [] //TODO: children
       let customControl = new CustomControl(instanceNode.name, bindings);
-      let nestedControl : NestedElements = {parent: customControl, children : []};
-
-      return nestedControl;
+      return customControl.getStartTag() + customControl.getEndTag();
 
     case 'COMPONENT':
       let componentNode = node as ComponentNode;
       // TODO: Make new resource file / new window
       let contentView = new ContentView(node.name);
-      let nestedComponent : NestedElements = {parent: contentView, children : []};
-      nn.children.forEach(n => nestedComponent.children.push(checkNodeType(n)));
-      return nestedComponent;
+      let nestedComponent = '';
+      nn.children.forEach(n => nestedComponent += `\t${checkNodeType(n)}\n`);
+      return contentView.getStartTag() + `\n${nestedComponent}` + contentView.getEndTag();
+
+    //Are not getting castet 
+    case 'VECTOR':
+      let vectorNode = node as VectorNode;
+      let vectorNote = `// Please export ${vectorNode.name} as a .png- or .svg file and place in the Resource/Images/ folder\n`
+      let vectorElement = TranslateVectorElement(vectorNode); 
+      return vectorNote + formatShortTag(vectorElement);
 
     case 'STAR':
+      let starNode = node as StarNode;
     case 'BOOLEAN_OPERATION':
+      let booleanOperationNode = node as BooleanOperationNode;
     case 'SLICE':
+      let sliceNode = node as SliceNode;
     default:
-      let element = {name: ElementName.none, properties: []}
-      let nested = {parent: element, children: []}
-      return nested;
+      return `<!-- This plugin is unfortuanately unable to cast ${node.type}s as MAUI elements. -->`;
   }
 }
 
-function parseUtypeNodes(nn : NestedNode) : NestedElements {
+function parseUtypeNodes(nn : NestedNode) : string {
   let node = nn.parent;
-  console.log('translating : ', node.utype);
   // Check the node's type using the 'type' property
   switch (node.utype) {
     case 'BUTTON':
@@ -254,18 +232,23 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
       return nestedCollection;
 
     default:
-      let element = {name: ElementName.none, properties: []}
-      let nested = {parent: element, children: []}
-      return nested;
+      return '';
   }
 }
 
-function formatProperties(properties : Property[]) : string{
-  const propertyString = properties
-    .filter((prop) => (prop.value !== 'None')) // Exclude properties with value 'None' because then it is set to default value
-    .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(" ");
-  return propertyString;
+export function ParseFigma(nodes: NestedNode[]) : string {
+  let xamlCode = "";
+  let rootnode = nodes[0];
+  let contentPage = new ContentPage(rootnode.parent.node.name);
+  xamlCode += contentPage.getStartTag() + newline();
+
+  rootnode.children.forEach( c => {
+    xamlCode += checkNodeType(c); //check if it is a user defined node or not
+  });
+
+  xamlCode += contentPage.getEndTag();
+
+  return xamlCode;
 }
 
 function formatStartTag(element: Element): string {
@@ -274,20 +257,20 @@ function formatStartTag(element: Element): string {
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
     .join(" ");
 
-  return `<${ElementName[element.name]} ${propertyString}>\n`;
+  return `<${ElementName[element.name]} ${propertyString}>` + newline();
 }
 
 function formatShortTag(element : Element): string {
   const propertyString = element.properties
     .filter((prop) => prop.value !== 'None') // Exclude properties with value 'None' because then it is set to default value
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(" " + `\n\t`);
+    .join(" " + newline() + `\t`);
 
-  return `<${ElementName[element.name]} ${propertyString}/>\n`;
+  return `<${ElementName[element.name]} ${propertyString}/>` + newline();
 }
 
 function formatEndTag(element: Element): string {
-  return `</${ElementName[element.name]}>\n`;
+  return `</${ElementName[element.name]}>`;
 }
 
 function TranslateFillsToFigma(parentElementName : string, node: SceneNode, fill : boolean) : NestedElements | Property {
@@ -356,6 +339,4 @@ function TranslateFillsToFigma(parentElementName : string, node: SceneNode, fill
   let element : Element = {name: ElementName.none, properties : []} 
  return {parent : element, children : []};
 }
-
-
 
