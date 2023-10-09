@@ -14,10 +14,68 @@ import { TranslateVectorElement } from "./figma-node-translation/shapes/vector-2
 import { TranslateButtonElement } from "./user-defined-types-translation/button-2-xaml";
 import { TranslateEditorElement } from "./user-defined-types-translation/editor-2-xaml";
 import { TranslateEntryElement } from "./user-defined-types-translation/entry-2-xaml";
-import { TranslateListViewElement } from "./user-defined-types-translation/listview-2-xaml";
+import { TranslateCollectionElement } from "./user-defined-types-translation/collection-2-xaml";
+import { type } from "os";
+import { TranslatePolygonElement } from "./figma-node-translation/shapes/polygon-2-polygon";
 
 
-function checkNodeType(nn: NestedNode): string {
+type NestedElements = {
+  parent : Element | CustomControl | ContentView,
+  children : NestedElements[]
+}
+
+export function ParseFigma(nodes: NestedNode[]) : string {
+  console.log('Parsing Nodes: ', nodes);
+  let xamlCode = "";
+  let rootnode = nodes[0];
+  let contentPage = new ContentPage(rootnode.parent.node.name);
+  let rootLayout = TranslateFigmaFrameToXamlLayout(rootnode.parent.node as FrameNode)
+
+  xamlCode += contentPage.getStartTag() + `\n${formatStartTag(rootLayout)}\n`;
+
+  rootnode.children.forEach( c => {
+    //Traslate the Nested elements to 
+    xamlCode += formatNestedElement(checkNodeType(c));
+  });
+
+  xamlCode += `\n${formatEndTag(rootLayout)}\n` + contentPage.getEndTag();
+
+  return xamlCode;
+}
+
+function formatNestedElement(element: NestedElements): string {
+  let result = '';
+
+  if (element.parent instanceof CustomControl) {
+    result +=  element.parent.getStartTag() + element.parent.getEndTag();
+    
+  } else if (element.parent instanceof ContentView) {
+    result += element.parent.getStartTag() + /*`\n${nestedComponent}` +*/ element.parent.getEndTag();
+
+  } else {
+    if (element.parent.name === ElementName.none) {
+      return '';
+    }
+    if (element.children.length > 0) {
+      // Start tag
+      result += formatStartTag(element.parent);
+
+      // Iterate over children and recursively call formatNestedElement on each child
+      element.children.forEach( c => { 
+        result += formatNestedElement(c);
+      })
+
+      result += formatEndTag(element.parent);
+    } else {
+      result += formatShortTag(element.parent);
+    }
+  }
+
+  return result;
+}
+
+function checkNodeType(nn: NestedNode): NestedElements {
+  //Check if the node has been assigned a custom value
   if (nn.parent.utype !== 'None') {
     return parseUtypeNodes(nn);
   } 
@@ -100,22 +158,78 @@ function parseUtypeNodes(nn : NestedNode) : string {
     case 'BUTTON':
       let buttonNode = node.node as SceneNode;
       let buttonElement = TranslateButtonElement(buttonNode);
-      return formatShortTag(buttonElement);
+      
+      let nestedButton : NestedElements = {parent: buttonElement, children : []};
+
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          let childNode = n.parent.node;
+          if (childNode.type === 'TEXT') {
+            let textElement = TranslateTextElement(childNode as TextNode);
+            buttonElement.properties.concat(textElement.properties);
+
+          } else if (childNode.type === 'VECTOR') {
+            let vectorElement = TranslateVectorElement(childNode as VectorNode);
+            buttonElement.properties.concat(vectorElement.properties);
+
+          } else {
+            nestedButton.children.push(checkNodeType(n));
+          }
+        });
+      }
+
+      return nestedButton;
 
     case 'EDITOR':
       let editorNode = node.node as SceneNode;
       let editorElement = TranslateEditorElement(editorNode);
-      return formatShortTag(editorElement);
+      let nestedEditor : NestedElements = {parent: editorElement, children : []};
+
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          let childNode = n.parent.node;
+          if (childNode.type === 'TEXT') {
+            let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
+            editorElement.properties.push(placeholderProp);
+          } else {
+            nestedEditor.children.push(checkNodeType(n));
+          }
+        });
+      }
+
+      return nestedEditor;
 
     case 'ENTRY':
       let entryNode = node.node as SceneNode;
       let entryElement = TranslateEntryElement(entryNode);
-      return formatShortTag(entryElement);
+      let nestedEntry : NestedElements = {parent: entryElement, children : []};
+
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          let childNode = n.parent.node;
+          if (childNode.type === 'TEXT') {
+            let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
+            editorElement.properties.push(placeholderProp);
+          } else {
+            nestedEntry.children.push(checkNodeType(n));
+          }
+        });
+      }
+
+      return nestedEntry;
 
     case 'LISTVIEW':
-      let listViewNode = node.node as SceneNode;
-      let listViewElement = TranslateListViewElement(listViewNode);
-      return formatShortTag(listViewElement);
+      let collectionNode = node.node as SceneNode;
+      let collectionElement = TranslateCollectionElement(collectionNode);
+      let nestedCollection : NestedElements = {parent: collectionElement, children : []};
+
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          nestedCollection.children.push(checkNodeType(n));
+        });
+      }
+
+      return nestedCollection;
 
     default:
       return '';
@@ -159,7 +273,70 @@ function formatEndTag(element: Element): string {
   return `</${ElementName[element.name]}>`;
 }
 
-function newline() : string {
-  return `\n`
+function TranslateFillsToFigma(parentElementName : string, node: SceneNode, fill : boolean) : NestedElements | Property {
+  if ('fills' in node) {
+
+    const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
+    if (fills && fills.length > 0) {
+        fills.forEach((fill) => {
+            if (fill.type === 'SOLID') {
+                // Handle Solid Paint
+                const solidPaint = fill as SolidPaint;
+                const color = `#${solidPaint.color.r}${solidPaint.color.g}${solidPaint.color.b}`;
+
+                if (fill) {
+                  return { name: PropertyName.Fill, value: color } as Property;
+                }
+                return { name: PropertyName.Background, value: color } as Property;
+
+
+            } else if (fill.type === 'GRADIENT_LINEAR') {
+                const gradientPaint = fill as GradientPaint;
+
+                let linearGradientBrushProp : Property[] = [
+                  {name: PropertyName.EndPoint, value: '1,0'}
+                ];
+                let linearGradientBrushElement : Element =
+                  {name : ElementName.LinearGradientBrush, properties: linearGradientBrushProp}
+
+                if (gradientPaint.gradientStops) {
+                  let gradProps = [] as Element[];
+                    gradientPaint.gradientStops.forEach(stop => {
+                        let gradProp : Property[]= [
+                          {name: PropertyName.OffSet, value: `${stop.position}`},
+                          {name: PropertyName.Color, value: `#${stop.color.r}${stop.color.g}${stop.color.b}`}
+                        ];
+                        gradProps.push({name: ElementName.GradientStop, properties: gradProp});
+                    });
+                    return {parent : linearGradientBrushElement, children : [gradProps]}
+                }
+                
+            } else if (fill.type === 'GRADIENT_RADIAL') {
+              // Handle Gradient Paint (Linear or Radial)
+              const gradientPaint = fill as GradientPaint;
+
+              let radialGradientBrushProp : Property[] = [
+                {name: PropertyName.Center, value: '0.5, 0.5'},
+                {name: PropertyName.Radius, value: '0.5'}
+              ];
+              let radialGradientBrushElement : Element =
+                {name : ElementName.RadialGradientBrush, properties: radialGradientBrushProp};
+
+              if (gradientPaint.gradientStops) {
+                let gradProps = [] as Element[];
+                gradientPaint.gradientStops.forEach(stop => {
+                    let gradProp : Property[]= [
+                      {name: PropertyName.OffSet, value: `${stop.position}`},
+                      {name: PropertyName.Color, value: `#${stop.color.r}${stop.color.g}${stop.color.b}`}
+                    ];
+                    gradProps.push({name: ElementName.GradientStop, properties: gradProp});
+                });
+              return {parent : radialGradientBrushElement, children : [gradProps]}
+            }
+    }});
+    }
+  }
+  let element : Element = {name: ElementName.none, properties : []} 
+ return {parent : element, children : []};
 }
 
