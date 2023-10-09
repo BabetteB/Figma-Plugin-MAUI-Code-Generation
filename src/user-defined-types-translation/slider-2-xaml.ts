@@ -1,0 +1,11 @@
+import { Element, ElementName } from "../Element";
+import { Property, PropertyName } from "../Property";
+
+
+export function TranslateSliderElement(node : SceneNode) : Element {
+    const sliderProperties: Property[] = [
+        { name: PropertyName.Maximum,     value: "10" }
+      ]
+      const sliderElement: Element = { name: ElementName.Slider, properties: sliderProperties };
+      return sliderElement;
+}

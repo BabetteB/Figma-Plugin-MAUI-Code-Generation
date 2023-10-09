@@ -14,6 +14,9 @@ import { TranslateVectorElement } from "./figma-node-translation/shapes/vector-2
 import { TranslateButtonElement } from "./user-defined-types-translation/button-2-xaml";
 import { TranslateEditorElement } from "./user-defined-types-translation/editor-2-xaml";
 import { TranslateEntryElement } from "./user-defined-types-translation/entry-2-xaml";
+import { TranslateSliderElement } from "./user-defined-types-translation/slider-2-xaml";
+import { TranslateSwitchElement } from "./user-defined-types-translation/switch-2-xaml";
+import { TranslateCheckBoxElement } from "./user-defined-types-translation/checkBox-2-xaml";
 import { TranslateCollectionElement } from "./user-defined-types-translation/collection-2-xaml";
 import { type } from "os";
 
@@ -244,7 +247,7 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
 
       return nestedEntry;
 
-    case 'LISTVIEW':
+    case 'COLLECTION':
       let collectionNode = node.node as SceneNode;
       let collectionElement = TranslateCollectionElement(collectionNode);
       let nestedCollection : NestedElements = {parent: collectionElement, children : []};
@@ -254,7 +257,6 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
           nestedCollection.children.push(checkNodeType(n));
         });
       }
-
       return nestedCollection;
     
     case 'IMAGE':
@@ -263,6 +265,24 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
       let nestedVector : NestedElements = {parent: vectorElement, children : []};
 
       return nestedVector;
+
+    case 'CHECKBOX':
+      let checkBoxNode = node.node as SceneNode;
+      let checkBoxElement = TranslateCheckBoxElement(checkBoxNode);
+      let nestedCheckBox : NestedElements = {parent: checkBoxElement, children : []};
+      return nestedCheckBox;
+
+    case 'SWITCH':
+      let switchNode = node.node as SceneNode;
+      let switchElement = TranslateSwitchElement(switchNode);
+      let nestedSwitch: NestedElements = {parent: switchElement, children : []};
+      return nestedSwitch;
+
+    case 'SLIDER':
+      let sliderNode = node.node as SceneNode;
+      let sliderElement = TranslateSliderElement(sliderNode);
+      let nestedSlider: NestedElements = {parent: sliderElement, children : []};
+      return nestedSlider;
 
     default:
       let element = {name: ElementName.none, properties: []}
