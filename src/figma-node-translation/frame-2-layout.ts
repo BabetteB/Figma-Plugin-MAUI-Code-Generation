@@ -72,10 +72,8 @@ function translateFigmaAlignItemsToXamlAlignItems(value: string) {
             return 'End';
         case "CENTER":
             return 'Center';
-        case "MIN":
-            return 'Start';
         default:
-            return 'Stretch';
+            return 'None';
     }
 }
 
@@ -93,9 +91,8 @@ function translateFigmaAlignContent(value: string) {
     switch (value) {
         case 'SPACE_BETWEEN':
             return 'SpaceBetween';
-    
         default:
-            return 'Stretch';
+            return 'None';
     }
 }
 

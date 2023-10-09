@@ -12,5 +12,5 @@ export function TranslateVectorElement(node: VectorNode): Element {
   }
 
 function translateSource(node : VectorNode) : string {
-    return `${node.name.toLowerCase}.png`
+    return `${node.name.toLowerCase()}.png`
 }

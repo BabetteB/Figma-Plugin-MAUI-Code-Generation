@@ -5,7 +5,7 @@ import { TranslateCommonProperties } from "../../commonPropertyParser";
 export function TranslateEllipseElement(node: EllipseNode): Element {
 
   const ellipseProperties: Property[] = [
-    { name: PropertyName.Fill,    value: node.fills.toString() },
+    { name: PropertyName.Fill,    value: translateFillsToFigma(node) ?? 'None' },
     { name: PropertyName.StrokeThickness,  value: node.strokeWeight.toString()},
     { name: PropertyName.Stroke,  value: translateFillsToFigma(node) ?? 'None'},
   ];

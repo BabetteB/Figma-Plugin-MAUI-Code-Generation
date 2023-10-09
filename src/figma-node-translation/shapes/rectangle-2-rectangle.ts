@@ -4,12 +4,20 @@ import { TranslateCommonProperties } from "../../commonPropertyParser";
 
 export function TranslateRectangleElement(node: RectangleNode): Element {
     const rectangleProperties: Property[] = [
-      { name: PropertyName.RadiusX, value: node.topLeftRadius.toString() },
-      { name: PropertyName.RadiusY, value: node.bottomRightRadius.toString() },
+      { name: PropertyName.RadiusX, value: translateDefaultNumberValue(node.topLeftRadius) },
+      { name: PropertyName.RadiusY, value: translateDefaultNumberValue(node.bottomRightRadius) },
       { name: PropertyName.Fill,    value: translateFillsToFigma(node) ?? 'None'}
     ];
     const rectangleElement: Element = { name: ElementName.Rectangle, properties: rectangleProperties.concat(TranslateCommonProperties(node)) };
     return rectangleElement; 
+  }
+
+  function translateDefaultNumberValue(n : number) : string {
+    if (n === 0) {
+      return 'None'
+    } else {
+      return n.toString();
+    }
   }
 
   function translateFillsToFigma(node: SceneNode) : string | null {

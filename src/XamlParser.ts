@@ -16,7 +16,6 @@ import { TranslateEditorElement } from "./user-defined-types-translation/editor-
 import { TranslateEntryElement } from "./user-defined-types-translation/entry-2-xaml";
 import { TranslateCollectionElement } from "./user-defined-types-translation/collection-2-xaml";
 import { type } from "os";
-import { TranslatePolygonElement } from "./figma-node-translation/shapes/polygon-2-polygon";
 
 
 type NestedElements = {
@@ -33,7 +32,7 @@ export function ParseFigma(nodes: NestedNode[]) : string {
 
   xamlCode += contentPage.getStartTag() + `\n${formatStartTag(rootLayout)}\n`;
 
-  rootnode.children.forEach( c => {
+  rootnode.children.reverse().forEach( c => {
     //Traslate the Nested elements to 
     xamlCode += formatNestedElement(checkNodeType(c));
   });
@@ -74,7 +73,6 @@ function formatNestedElement(element: NestedElements): string {
   return result;
 }
 
-
 function checkNodeType(nn: NestedNode): NestedElements {
   //Check if the node has been assigned a custom value
   if (nn.parent.utype !== 'None') {
@@ -87,15 +85,21 @@ function checkNodeType(nn: NestedNode): NestedElements {
   // Check the node's type using the 'type' property
   switch (node.type) {
     case 'FRAME':
+      if (nn.children.length === 1 && nn.children[0].parent.node.type === 'VECTOR') {
+        // Skip the frame and return the vector directly
+        return checkNodeType(nn.children[0]);
+    } else {
       // Create frame element -> becaomes a xaml layout element 
       let frameNode = node as FrameNode;
       let frameElement = TranslateFigmaFrameToXamlLayout(frameNode);
 
+      frameElement.properties.push(TranslateFillsToFigma(node, false));
       let nestedFrame : NestedElements = {parent: frameElement, children : []};
       nn.children.forEach(n => nestedFrame.children.push(checkNodeType(n)));
+
    
       return nestedFrame;
-
+    }
     case 'GROUP':
       let groupElement : Element = {name: ElementName.none, properties: []};
 
@@ -115,6 +119,7 @@ function checkNodeType(nn: NestedNode): NestedElements {
     case 'ELLIPSE':
       let ellipseNode = node as EllipseNode;
       let ellipseElement = TranslateEllipseElement(ellipseNode);
+
       let nestedElipse : NestedElements = {parent: ellipseElement, children : []};
 
       return nestedElipse;
@@ -132,13 +137,6 @@ function checkNodeType(nn: NestedNode): NestedElements {
       let nestedRectangle : NestedElements = {parent: rectangleElement, children : []};
 
       return nestedRectangle;
-
-    case 'POLYGON':
-      let polygonNode = node as PolygonNode;
-      let polygonElement = TranslatePolygonElement(polygonNode); 
-      let nestedPolygon : NestedElements = {parent: polygonElement, children : []};
-
-      return nestedPolygon;
 
     case 'VECTOR':
       let vectorNode = node as VectorNode;
@@ -175,23 +173,25 @@ function checkNodeType(nn: NestedNode): NestedElements {
 
 function parseUtypeNodes(nn : NestedNode) : NestedElements {
   let node = nn.parent;
+  let isTextPropertySet = false;   
   console.log('translating : ', node.utype);
   // Check the node's type using the 'type' property
   switch (node.utype) {
     case 'BUTTON':
       let buttonNode = node.node as SceneNode;
       let buttonElement = TranslateButtonElement(buttonNode);
-      
+      buttonElement.properties.push(TranslateFillsToFigma(node.node as SceneNode, false))    
       let nestedButton : NestedElements = {parent: buttonElement, children : []};
 
       if (nn.children.length > 0) {
         nn.children.forEach ( n => {
           let childNode = n.parent.node;
-          if (childNode.type === 'TEXT') {
+          if (childNode.type === 'TEXT' && !isTextPropertySet) {
             let textElement = TranslateTextElement(childNode as TextNode);
             buttonElement.properties.concat(textElement.properties);
+            isTextPropertySet = true;
 
-          } else if (childNode.type === 'VECTOR') {
+          } else if ((childNode.type === 'VECTOR') || (n.parent.utype === 'IMAGE')) {
             let vectorElement = TranslateVectorElement(childNode as VectorNode);
             buttonElement.properties.concat(vectorElement.properties);
 
@@ -206,14 +206,16 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
     case 'EDITOR':
       let editorNode = node.node as SceneNode;
       let editorElement = TranslateEditorElement(editorNode);
+      editorElement.properties.push(TranslateFillsToFigma(node.node as SceneNode, false)) 
       let nestedEditor : NestedElements = {parent: editorElement, children : []};
 
       if (nn.children.length > 0) {
         nn.children.forEach ( n => {
           let childNode = n.parent.node;
-          if (childNode.type === 'TEXT') {
+          if (childNode.type === 'TEXT' && !isTextPropertySet) {
             let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
             editorElement.properties.push(placeholderProp);
+            isTextPropertySet = true;
           } else {
             nestedEditor.children.push(checkNodeType(n));
           }
@@ -230,9 +232,10 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
       if (nn.children.length > 0) {
         nn.children.forEach ( n => {
           let childNode = n.parent.node;
-          if (childNode.type === 'TEXT') {
+          if (childNode.type === 'TEXT' && !isTextPropertySet) {
             let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
             editorElement.properties.push(placeholderProp);
+            isTextPropertySet = true;
           } else {
             nestedEntry.children.push(checkNodeType(n));
           }
@@ -253,6 +256,13 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
       }
 
       return nestedCollection;
+    
+    case 'IMAGE':
+      let vectorNode = node.node as VectorNode;
+      let vectorElement = TranslateVectorElement(vectorNode); 
+      let nestedVector : NestedElements = {parent: vectorElement, children : []};
+
+      return nestedVector;
 
     default:
       let element = {name: ElementName.none, properties: []}
@@ -261,19 +271,11 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
   }
 }
 
-function formatProperties(properties : Property[]) : string{
-  const propertyString = properties
-    .filter((prop) => (prop.value !== 'None')) // Exclude properties with value 'None' because then it is set to default value
-    .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(" ");
-  return propertyString;
-}
-
 function formatStartTag(element: Element): string {
   const propertyString = element.properties
     .filter((prop) => (prop.value !== 'None')) // Exclude properties with value 'None' because then it is set to default value
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(" ");
+    .join(` \n\t`);
 
   return `<${ElementName[element.name]} ${propertyString}>\n`;
 }
@@ -291,9 +293,8 @@ function formatEndTag(element: Element): string {
   return `</${ElementName[element.name]}>\n`;
 }
 
-function TranslateFillsToFigma(parentElementName : string, node: SceneNode, fill : boolean) : NestedElements | Property {
+function TranslateFillsToFigma(node: SceneNode, fill : boolean) :  Property {
   if ('fills' in node) {
-
     const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
     if (fills && fills.length > 0) {
         fills.forEach((fill) => {
@@ -306,56 +307,11 @@ function TranslateFillsToFigma(parentElementName : string, node: SceneNode, fill
                   return { name: PropertyName.Fill, value: color } as Property;
                 }
                 return { name: PropertyName.Background, value: color } as Property;
-
-
-            } else if (fill.type === 'GRADIENT_LINEAR') {
-                const gradientPaint = fill as GradientPaint;
-
-                let linearGradientBrushProp : Property[] = [
-                  {name: PropertyName.EndPoint, value: '1,0'}
-                ];
-                let linearGradientBrushElement : Element =
-                  {name : ElementName.LinearGradientBrush, properties: linearGradientBrushProp}
-
-                if (gradientPaint.gradientStops) {
-                  let gradProps = [] as Element[];
-                    gradientPaint.gradientStops.forEach(stop => {
-                        let gradProp : Property[]= [
-                          {name: PropertyName.OffSet, value: `${stop.position}`},
-                          {name: PropertyName.Color, value: `#${stop.color.r}${stop.color.g}${stop.color.b}`}
-                        ];
-                        gradProps.push({name: ElementName.GradientStop, properties: gradProp});
-                    });
-                    return {parent : linearGradientBrushElement, children : [gradProps]}
-                }
-                
-            } else if (fill.type === 'GRADIENT_RADIAL') {
-              // Handle Gradient Paint (Linear or Radial)
-              const gradientPaint = fill as GradientPaint;
-
-              let radialGradientBrushProp : Property[] = [
-                {name: PropertyName.Center, value: '0.5, 0.5'},
-                {name: PropertyName.Radius, value: '0.5'}
-              ];
-              let radialGradientBrushElement : Element =
-                {name : ElementName.RadialGradientBrush, properties: radialGradientBrushProp};
-
-              if (gradientPaint.gradientStops) {
-                let gradProps = [] as Element[];
-                gradientPaint.gradientStops.forEach(stop => {
-                    let gradProp : Property[]= [
-                      {name: PropertyName.OffSet, value: `${stop.position}`},
-                      {name: PropertyName.Color, value: `#${stop.color.r}${stop.color.g}${stop.color.b}`}
-                    ];
-                    gradProps.push({name: ElementName.GradientStop, properties: gradProp});
-                });
-              return {parent : radialGradientBrushElement, children : [gradProps]}
-            }
-    }});
+            } 
+          });
     }
   }
-  let element : Element = {name: ElementName.none, properties : []} 
- return {parent : element, children : []};
+  return { name : PropertyName.none, value: 'None'}
 }
 
 
