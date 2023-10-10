@@ -7,6 +7,7 @@ let background    = {name: ElementName.Background, properties: [] as Property[]}
 
 export function TranslateCommonProperties(node : SceneNode) : Property[] {
     const commonProperties: Property[] = [
+        { name: PropertyName["x:Name"],         value: toCamelCase(node.name) },
         { name: PropertyName.HeightRequest,     value: node.height.toString() },
         { name: PropertyName.WidthRequest,      value: node.width.toString()  },
         { name: PropertyName.Opacity,           value: translateOpacity(node) ?? 'None'  },
@@ -15,6 +16,18 @@ export function TranslateCommonProperties(node : SceneNode) : Property[] {
         { name: PropertyName.VerticalOptions,   value: translateLayoutAlign(node) ?? 'None' },
       ]
       return commonProperties;
+}
+
+function toCamelCase(str: string): string {
+  return str.split(' ')  // Split the string by spaces
+      .map((word, index) => {
+          // Convert the first word to lowercase and others to capitalize the first letter
+          if (index === 0) {
+              return word.toLowerCase();
+          }
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join('');  // Join all parts together
 }
 
 function translateLayoutAlign(node : SceneNode) : string | null{
@@ -27,7 +40,7 @@ function translateLayoutAlign(node : SceneNode) : string | null{
       case "STRETCH":
         return 'Fill';
       default:
-        return 'Start';
+        return 'None';
     }
   }
   return null
@@ -62,6 +75,9 @@ function boolToDefault(value : boolean, defaultValue : boolean) : string {
 
 function translateOpacity(node : BaseNode) : string | null{
   if ('opacity' in node){
+    if (node.opacity === 1) {
+      return 'None';
+    }
     return node.opacity.toString()
   }
   return null

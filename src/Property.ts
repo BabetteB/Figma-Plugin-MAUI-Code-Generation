@@ -83,6 +83,8 @@ export enum PropertyName {
 
     FontAttribute,
     
+    none,
+    'x:Name',
     ForegroundColor,
     BorderColor,
     BorderThickness,
