@@ -122,8 +122,8 @@
                 `;
 
                 select.addEventListener('change', (event) => {
+                    
                     const selectedValue = event.target.value;
-                    // Update the selectedValues array
                     selectedValues.push({node, selectedValue});
                 });
 
@@ -146,7 +146,7 @@
                     textDiv.addEventListener('click', () => {
                         childrenList.classList.toggle('unfolded');
                     });
-            }
+                }
 
             return listItem;
         }
