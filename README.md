@@ -32,13 +32,15 @@ Once you've installed the Figma Code Generation Plugin and made your design, her
 
 2. **Open the Plugin**: In the Figma menu, go to "Plugins" > "Code Generation Plugin" to open the plugin interface.
 
-3. **Specify Element Types**: For each selected design element, use the drop-down menu provided in the plugin interface to specify the corresponding element type (e.g. button, image, etc.).
+3. **Naming**: The elements displayed name are the same as the names in the Figma File.
 
-4. **Review Selection**: Double-check your selections and make sure all elements are correctly assigned types.
+4. **The Elements are nested**: To unfold the nested elements please click on the frame name. Unfold til you find all the elements that needs a custom type.
 
-5. **Generate Code**: Once you're satisfied with your selections, press the "Export design" button within the plugin interface.
+5. **Specify Element Types**: For each, Button, Slider, Inputfield, TextArea, ListView, Image, RadioButton, Checkbox, selected design element, use the drop-down menu provided in the plugin interface to specify the corresponding element type.
 
-6. **Screen shot**: When you have exported the code, please take a screen shot where alle the type declerations are viseble.
+6. **Review Selection**: Double-check your selections and make sure all elements are correctly assigned types.
+
+7. **Generate Code**: Once you're satisfied with your selections, press the "Export design" button within the plugin interface.
 
 ## Exporting Code
 
