@@ -47,63 +47,64 @@ function traverse(cn: SceneNode): NestedNode {
 
 const selection = figma.currentPage.selection[0];
 
-const rootNode: DisplayNode = makeDisplayNode(selection as BaseNode);
-let list : SceneNode[] = [];
-if ('children' in selection){
-  selection.children.forEach( c => list.push(c));
-}
-const nodes: NestedNode[] = [
-  {
-    parent: rootNode,
-    children: childrenToNestedNodes(list),
-  },
-];
+if (selection !== undefined || null) {
+  const rootNode: DisplayNode = makeDisplayNode(selection as BaseNode);
+  let list : SceneNode[] = [];
+  if ('children' in selection){
+    selection.children.forEach( c => list.push(c));
+  }
 
-let nodes2Parse: NestedNode[] = [];
+  const nodes: NestedNode[] = [
+    {
+      parent: rootNode,
+      children: childrenToNestedNodes(list),
+    },
+  ];
 
-figma.ui.postMessage({ type: 'init', nodes });
+  let nodes2Parse: NestedNode[] = [];
 
-figma.ui.onmessage = (message) => {
-  console.log("got this from the UI", message);
-  nodes2Parse = updateDisplayNodeUType(nodes, message);
+  figma.ui.postMessage({ type: 'init', nodes });
 
-  function updateDisplayNodeUType(selection: NestedNode[], message: { node: NestedNode; selectedValue: string }[]): NestedNode[] {
-    // Create a mapping of BaseNode.id to selectedValue
-  const selectedValueMap: Record<string, string> = {};
-  message.forEach((item) => {
-    selectedValueMap[item.node.parent.node.id] = item.selectedValue;
-  });
+  figma.ui.onmessage = (message) => {
+    console.log("got this from the UI", message);
+    nodes2Parse = updateDisplayNodeUType(nodes, message);
 
-  // Create a new array to hold the updated selection
-  const updatedSelection: NestedNode[] = [];
+    function updateDisplayNodeUType(selection: NestedNode[], message: { node: NestedNode; selectedValue: string }[]): NestedNode[] {
+      // Create a mapping of BaseNode.id to selectedValue
+      const selectedValueMap: Record<string, string> = {};
+      message.forEach((item) => {
+        selectedValueMap[item.node.parent.node.id] = item.selectedValue;
+      });
 
-  // Recursive function to update nodes
-  function updateChildren(node: NestedNode): NestedNode {
-    const selectedValue = selectedValueMap[node.parent.node.id];
-    if (selectedValue !== undefined) {
-      // Create a new node with updated utype
-      const updatedParent = { ...node.parent, utype: selectedValue };
-      return { parent: updatedParent, children: node.children.map((child) => updateChildren(child)) };
-    } else {
-      // If no update is needed, return the original node
-      return { parent: node.parent, children: node.children.map((child) => updateChildren(child)) };
+      // Create a new array to hold the updated selection
+      const updatedSelection: NestedNode[] = [];
+
+      // Recursive function to update nodes
+      function updateChildren(node: NestedNode): NestedNode {
+        const selectedValue = selectedValueMap[node.parent.node.id];
+        if (selectedValue !== undefined) {
+          // Create a new node with updated utype
+          const updatedParent = { ...node.parent, utype: selectedValue };
+          return { parent: updatedParent, children: node.children.map((child) => updateChildren(child)) };
+        } else {
+          // If no update is needed, return the original node
+          return { parent: node.parent, children: node.children.map((child) => updateChildren(child)) };
+        }
     }
+
+    // Iterate through the selection and update nodes based on the message
+    selection.forEach((nestedNode) => {
+      const updatedNode = updateChildren(nestedNode);
+      updatedSelection.push(updatedNode);
+    });  
+
+    return updatedSelection;
+    }
+    
+    const textContent = ParseFigma(nodes2Parse);
+
+    figma.ui.postMessage({type: "fileInfo", textContent });
+
   }
-
-  // Iterate through the selection and update nodes based on the message
-  selection.forEach((nestedNode) => {
-    const updatedNode = updateChildren(nestedNode);
-    updatedSelection.push(updatedNode);
-  });  
-
-  return updatedSelection;
-  }
-  
-
-  const textContent = ParseFigma(nodes2Parse);
-
-   figma.ui.postMessage({type: "fileInfo", textContent });
-
 }
-
 

@@ -5,18 +5,18 @@ export type Binding = {
 
 export class CustomControl {
     startTag:   string;
-    endTag:     string = '/>';
+    endTag:     string = '/>\n';
     name:       string;
     bindings :  Binding[];
 
     constructor(controlName : string, bindings : Binding[]){
+        this.name = controlName;
         this.bindings = bindings;
         this.startTag = this.FormatStartTag();
-        this.name = controlName;
     }
     
     getStartTag() {
-        return this.startTag;
+        return this.startTag + this.name;
     }
 
     getEndTag() {

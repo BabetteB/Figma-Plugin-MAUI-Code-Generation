@@ -1,15 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frame Example</title>
-    <style>
-        /* .draggable_modal--positionedContainer--8AmbN{
-            width: 100%;
-            height: 100%;
-        } */
-        .frame {
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Figma 2 Maui</title>
+        <style>
+            .frame {
             width: 300px;
             height: 300px;
             border: 1px solid #ccc;
@@ -66,26 +62,27 @@
         hr{
             width: 95%;
         }
-    </style>
-</head>
-<body>
-    <div>
-        <h3>Figma Design 2 .NET MAUI Code Generator</h3>
-
-        <div class="popup-button">
-            <a href="#" id="popup-link">How 2 use?</a>
+        </style>
+    </head>
+    
+    <body>
+        <div>
+            <h3>Figma Design 2 .NET MAUI Code Generator</h3>
+    
+            <div class="popup-button">
+                <a href="#" id="popup-link">How 2 use?</a>
+            </div>
+    
+            <ul id="node-list">
+                <!-- JavaScript will populate this list -->
+            </ul>
+    
+            <div class="button-bar">
+                <button class="button" id="save-button">Save</button>
+                <button class="button" id="export-button">Export Design</button>
+                <a id="downloadLink" style="display: none;">Download Code</a>
+            </div>
         </div>
-
-        <ul id="node-list">
-            <!-- JavaScript will populate this list -->
-        </ul>
-        <hr>
-
-        <div class="button-bar">
-          <button class="button" id="save-button">Save</button>
-          <button class="button" id="export-button">Export Design</button>
-        </div>
-    </div>
 
 <script>
 
@@ -111,22 +108,15 @@
                 <div>
                     <select>
                         <option value="" disabled selected>Select value</option>
-                        <option value="none">None</option>
-                        <option value="image">Image</option>
-                        <option value="label">Label</option>
-                        <option value="button">Button</option>
-                        <option value="image-button">ImageButton</option>
-                        <option value="swipe-view">SwipeView</option>
-                        <option value="check-box">CheckBox</option>
-                        <option value="slider">Slider</option>
-                        <option value="switch">Switch</option>
-                        <option value="editor">Editor</option>
-                        <option value="entry">Entry</option>
-                        <option value="list-view">ListView</option>
-                        <option value="table-view">TableView</option>
-                        <option value="menu-item">MenuItem</option>
-                        <option value="toolbar-item">ToolbarItem</option>
-                        <option value="display-pop-ups">Display Pop-ups</option>
+                        <option value="None">None</option>
+                        <option value="BUTTON">Button</option>
+                        <option value="IMAGE">Image</option>
+                        <option value="CHECHBOX">Check Box</option>
+                        <option value="SLIDER">Slider</option>
+                        <option value="SWITCH">Radio Buttin</option>
+                        <option value="EDITOR">Text Area</option>
+                        <option value="ENTRY">Input Field</option>
+                        <option value="COLLECTION">List View</option>
                     </select>
                 </div>
                 `;
@@ -172,24 +162,32 @@
         exportButton.addEventListener('click', () => {
             parent.postMessage({ pluginMessage: selectedValues }, '*')
         });
-    } else if (data.type === "url") {
-        const fileName = 'textfile.txt';
-
-        download(fileName, 'Hello World!');
+    } 
+    else if (data.type === 'fileInfo') {
+        //console.log(data.textContent);
+        downloadCode(data.textContent);
     }
 
-    function download(filename, text) {
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-        element.setAttribute('download', filename);
+    function downloadCode(generatedCode) {
+        const blob = new Blob([generatedCode], { type: 'text/plain' });
 
-        element.style.display = 'none';
-        document.body.appendChild(element);
+        // Create a URL for the Blob
+        const url = window.URL.createObjectURL(blob);
 
-        element.click();
+        // Create a download link
+        const downloadLink = document.getElementById('downloadLink');
+        downloadLink.href = url;
+        downloadLink.download = 'generated_code.txt';
 
-        document.body.removeChild(element);
+        // Display the download link and trigger the download
+        downloadLink.style.display = 'block';
+        downloadLink.click();
+
+        // Clean up the URL and hide the link
+        window.URL.revokeObjectURL(url);
+        downloadLink.style.display = 'none';
     }
+    
 } 
 </script>
 </body>

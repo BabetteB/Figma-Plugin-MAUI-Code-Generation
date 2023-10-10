@@ -14,152 +14,325 @@ import { TranslateVectorElement } from "./figma-node-translation/shapes/vector-2
 import { TranslateButtonElement } from "./user-defined-types-translation/button-2-xaml";
 import { TranslateEditorElement } from "./user-defined-types-translation/editor-2-xaml";
 import { TranslateEntryElement } from "./user-defined-types-translation/entry-2-xaml";
-import { TranslateListViewElement } from "./user-defined-types-translation/listview-2-xaml";
+import { TranslateSliderElement } from "./user-defined-types-translation/slider-2-xaml";
+import { TranslateSwitchElement } from "./user-defined-types-translation/switch-2-xaml";
+import { TranslateCheckBoxElement } from "./user-defined-types-translation/checkBox-2-xaml";
+import { TranslateCollectionElement } from "./user-defined-types-translation/collection-2-xaml";
+import { type } from "os";
 
 
-function checkNodeType(nn: NestedNode): string {
+type NestedElements = {
+  parent : Element | CustomControl | ContentView,
+  children : NestedElements[]
+}
+
+export function ParseFigma(nodes: NestedNode[]) : string {
+  console.log('Parsing Nodes: ', nodes);
+  let xamlCode = "";
+  let rootnode = nodes[0];
+  let contentPage = new ContentPage(rootnode.parent.node.name);
+  let rootLayout = TranslateFigmaFrameToXamlLayout(rootnode.parent.node as FrameNode)
+
+  xamlCode += contentPage.getStartTag() + `\n${formatStartTag(rootLayout)}\n`;
+
+  rootnode.children.reverse().forEach( c => {
+    //Traslate the Nested elements to 
+    xamlCode += formatNestedElement(checkNodeType(c));
+  });
+
+  xamlCode += `\n${formatEndTag(rootLayout)}\n` + contentPage.getEndTag();
+
+  return xamlCode;
+}
+
+function formatNestedElement(element: NestedElements): string {
+  let result = '';
+
+  if (element.parent instanceof CustomControl) {
+    result +=  element.parent.getStartTag() + element.parent.getEndTag();
+    
+  } else if (element.parent instanceof ContentView) {
+    result += element.parent.getStartTag() + /*`\n${nestedComponent}` +*/ element.parent.getEndTag();
+
+  } else {
+    if (element.parent.name === ElementName.none) {
+      return '';
+    }
+    if (element.children.length > 0) {
+      // Start tag
+      result += formatStartTag(element.parent);
+
+      // Iterate over children and recursively call formatNestedElement on each child
+      element.children.forEach( c => { 
+        result += formatNestedElement(c);
+      })
+
+      result += formatEndTag(element.parent);
+    } else {
+      result += formatShortTag(element.parent);
+    }
+  }
+
+  return result;
+}
+
+function checkNodeType(nn: NestedNode): NestedElements {
+  //Check if the node has been assigned a custom value
   if (nn.parent.utype !== 'None') {
     return parseUtypeNodes(nn);
   } 
+
+  // take the top node
   let node = nn.parent.node;
+
   // Check the node's type using the 'type' property
   switch (node.type) {
     case 'FRAME':
+      if (nn.children.length === 1 && nn.children[0].parent.node.type === 'VECTOR') {
+        // Skip the frame and return the vector directly
+        return checkNodeType(nn.children[0]);
+    } else {
+      // Create frame element -> becaomes a xaml layout element 
       let frameNode = node as FrameNode;
-      let nestedFrameNodes = '';
-      nn.children.forEach(n => nestedFrameNodes += checkNodeType(n) + `\n`);
       let frameElement = TranslateFigmaFrameToXamlLayout(frameNode);
-      return formatStartTag(frameElement) + `\t${nestedFrameNodes}` + formatEndTag(frameElement);
 
+      frameElement.properties.push(TranslateFillsToFigma(node, false));
+      let nestedFrame : NestedElements = {parent: frameElement, children : []};
+      nn.children.forEach(n => nestedFrame.children.push(checkNodeType(n)));
+
+   
+      return nestedFrame;
+    }
     case 'GROUP':
-      let groupNode = node as GroupNode;
-      let nestedGroupNodes = '';
-      nn.children.forEach(n => nestedGroupNodes += checkNodeType(n) + `\n`);
-      return nestedGroupNodes;
+      let groupElement : Element = {name: ElementName.none, properties: []};
+
+      let nestedGroup : NestedElements = {parent: groupElement, children : []};
+      nn.children.forEach(n => nestedGroup.children.push(checkNodeType(n)));
+
+      return nestedGroup;
 
     case 'TEXT':
       let textNode = node as TextNode;
       let textElement = TranslateTextElement(textNode);
-      return formatShortTag(textElement);
+
+      let nestedText : NestedElements = {parent: textElement, children : []};
+
+      return nestedText;
 
     case 'ELLIPSE':
       let ellipseNode = node as EllipseNode;
       let ellipseElement = TranslateEllipseElement(ellipseNode);
-      return formatShortTag(ellipseElement);
+
+      let nestedElipse : NestedElements = {parent: ellipseElement, children : []};
+
+      return nestedElipse;
 
     case 'LINE':
       let lineNode = node as LineNode;
       let lineElement = TranslateLineElement(lineNode);
-      return formatShortTag(lineElement);
+      let nestedLine : NestedElements = {parent: lineElement, children : []};
+
+      return nestedLine;
 
     case 'RECTANGLE':
       let rectangleNode = node as RectangleNode;
       let rectangleElement = TranslateRectangleElement(rectangleNode); 
-      return formatShortTag(rectangleElement);
+      let nestedRectangle : NestedElements = {parent: rectangleElement, children : []};
 
-    case 'POLYGON':
-      let polygonNode = node as PolygonNode;
-      return 'Polygon';
+      return nestedRectangle;
+
+    case 'VECTOR':
+      let vectorNode = node as VectorNode;
+      let vectorElement = TranslateVectorElement(vectorNode); 
+      let nestedVector : NestedElements = {parent: vectorElement, children : []};
+
+      return nestedVector;
 
     case 'INSTANCE':
       let instanceNode = node as InstanceNode;
       let bindings : Binding[] = [] //TODO: children
       let customControl = new CustomControl(instanceNode.name, bindings);
-      return customControl.getStartTag() + customControl.getEndTag();
+      let nestedControl : NestedElements = {parent: customControl, children : []};
+
+      return nestedControl;
 
     case 'COMPONENT':
       let componentNode = node as ComponentNode;
       // TODO: Make new resource file / new window
       let contentView = new ContentView(node.name);
-      let nestedComponent = '';
-      nn.children.forEach(n => nestedComponent += `\t${checkNodeType(n)}\n`);
-      return contentView.getStartTag() + `\n${nestedComponent}` + contentView.getEndTag();
-
-    //Are not getting castet 
-    case 'VECTOR':
-      let vectorNode = node as VectorNode;
-      let vectorNote = `// Please export ${vectorNode.name} as a .png- or .svg file and place in the Resource/Images/ folder\n`
-      let vectorElement = TranslateVectorElement(vectorNode); 
-      return vectorNote + formatShortTag(vectorElement);
+      let nestedComponent : NestedElements = {parent: contentView, children : []};
+      nn.children.forEach(n => nestedComponent.children.push(checkNodeType(n)));
+      return nestedComponent;
 
     case 'STAR':
-      let starNode = node as StarNode;
     case 'BOOLEAN_OPERATION':
-      let booleanOperationNode = node as BooleanOperationNode;
     case 'SLICE':
-      let sliceNode = node as SliceNode;
     default:
-      return `<!-- This plugin is unfortuanately unable to cast ${node.type}s as MAUI elements. -->`;
+      let element = {name: ElementName.none, properties: []}
+      let nested = {parent: element, children: []}
+      return nested;
   }
 }
 
-function parseUtypeNodes(nn : NestedNode) : string {
+function parseUtypeNodes(nn : NestedNode) : NestedElements {
   let node = nn.parent;
+  let isTextPropertySet = false;   
+  console.log('translating : ', node.utype);
   // Check the node's type using the 'type' property
   switch (node.utype) {
     case 'BUTTON':
       let buttonNode = node.node as SceneNode;
       let buttonElement = TranslateButtonElement(buttonNode);
-      return formatShortTag(buttonElement);
+      buttonElement.properties.push(TranslateFillsToFigma(node.node as SceneNode, false))    
+      let nestedButton : NestedElements = {parent: buttonElement, children : []};
+
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          let childNode = n.parent.node;
+          if (childNode.type === 'TEXT' && !isTextPropertySet) {
+            let textElement = TranslateTextElement(childNode as TextNode);
+            buttonElement.properties.concat(textElement.properties);
+            isTextPropertySet = true;
+
+          } else if ((childNode.type === 'VECTOR') || (n.parent.utype === 'IMAGE')) {
+            let vectorElement = TranslateVectorElement(childNode as VectorNode);
+            buttonElement.properties.concat(vectorElement.properties);
+
+          } else {
+            nestedButton.children.push(checkNodeType(n));
+          }
+        });
+      }
+
+      return nestedButton;
 
     case 'EDITOR':
       let editorNode = node.node as SceneNode;
       let editorElement = TranslateEditorElement(editorNode);
-      return formatShortTag(editorElement);
+      editorElement.properties.push(TranslateFillsToFigma(node.node as SceneNode, false)) 
+      let nestedEditor : NestedElements = {parent: editorElement, children : []};
+
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          let childNode = n.parent.node;
+          if (childNode.type === 'TEXT' && !isTextPropertySet) {
+            let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
+            editorElement.properties.push(placeholderProp);
+            isTextPropertySet = true;
+          } else {
+            nestedEditor.children.push(checkNodeType(n));
+          }
+        });
+      }
+
+      return nestedEditor;
 
     case 'ENTRY':
       let entryNode = node.node as SceneNode;
       let entryElement = TranslateEntryElement(entryNode);
-      return formatShortTag(entryElement);
+      let nestedEntry : NestedElements = {parent: entryElement, children : []};
 
-    case 'LISTVIEW':
-      let listViewNode = node.node as SceneNode;
-      let listViewElement = TranslateListViewElement(listViewNode);
-      return formatShortTag(listViewElement);
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          let childNode = n.parent.node;
+          if (childNode.type === 'TEXT' && !isTextPropertySet) {
+            let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
+            editorElement.properties.push(placeholderProp);
+            isTextPropertySet = true;
+          } else {
+            nestedEntry.children.push(checkNodeType(n));
+          }
+        });
+      }
+
+      return nestedEntry;
+
+    case 'COLLECTION':
+      let collectionNode = node.node as SceneNode;
+      let collectionElement = TranslateCollectionElement(collectionNode);
+      let nestedCollection : NestedElements = {parent: collectionElement, children : []};
+
+      if (nn.children.length > 0) {
+        nn.children.forEach ( n => {
+          nestedCollection.children.push(checkNodeType(n));
+        });
+      }
+      return nestedCollection;
+    
+    case 'IMAGE':
+      let vectorNode = node.node as VectorNode;
+      let vectorElement = TranslateVectorElement(vectorNode); 
+      let nestedVector : NestedElements = {parent: vectorElement, children : []};
+
+      return nestedVector;
+
+    case 'CHECKBOX':
+      let checkBoxNode = node.node as SceneNode;
+      let checkBoxElement = TranslateCheckBoxElement(checkBoxNode);
+      let nestedCheckBox : NestedElements = {parent: checkBoxElement, children : []};
+      return nestedCheckBox;
+
+    case 'SWITCH':
+      let switchNode = node.node as SceneNode;
+      let switchElement = TranslateSwitchElement(switchNode);
+      let nestedSwitch: NestedElements = {parent: switchElement, children : []};
+      return nestedSwitch;
+
+    case 'SLIDER':
+      let sliderNode = node.node as SceneNode;
+      let sliderElement = TranslateSliderElement(sliderNode);
+      let nestedSlider: NestedElements = {parent: sliderElement, children : []};
+      return nestedSlider;
 
     default:
-      return '';
+      let element = {name: ElementName.none, properties: []}
+      let nested = {parent: element, children: []}
+      return nested;
   }
-}
-
-export function ParseFigma(nodes: NestedNode[]) : string {
-  let xamlCode = "";
-  let rootnode = nodes[0];
-  let contentPage = new ContentPage(rootnode.parent.node.name);
-  xamlCode += contentPage.getStartTag() + newline();
-
-  rootnode.children.forEach( c => {
-    xamlCode += checkNodeType(c); //check if it is a user defined node or not
-  });
-
-  xamlCode += contentPage.getEndTag();
-
-  return xamlCode;
 }
 
 function formatStartTag(element: Element): string {
   const propertyString = element.properties
     .filter((prop) => (prop.value !== 'None')) // Exclude properties with value 'None' because then it is set to default value
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(" ");
+    .join(` \n\t`);
 
-  return `<${ElementName[element.name]} ${propertyString}>` + newline();
+  return `<${ElementName[element.name]} ${propertyString}>\n`;
 }
 
 function formatShortTag(element : Element): string {
   const propertyString = element.properties
     .filter((prop) => prop.value !== 'None') // Exclude properties with value 'None' because then it is set to default value
     .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(" " + newline() + `\t`);
+    .join(" " + `\n\t`);
 
-  return `<${ElementName[element.name]} ${propertyString}/>` + newline();
+  return `<${ElementName[element.name]} ${propertyString}/>\n`;
 }
 
 function formatEndTag(element: Element): string {
-  return `</${ElementName[element.name]}>`;
+  return `</${ElementName[element.name]}>\n`;
 }
 
-function newline() : string {
-  return `\n`
+function TranslateFillsToFigma(node: SceneNode, fill : boolean) :  Property {
+  if ('fills' in node) {
+    const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
+    if (fills && fills.length > 0) {
+        fills.forEach((fill) => {
+            if (fill.type === 'SOLID') {
+                // Handle Solid Paint
+                const solidPaint = fill as SolidPaint;
+                const color = `#${solidPaint.color.r}${solidPaint.color.g}${solidPaint.color.b}`;
+
+                if (fill) {
+                  return { name: PropertyName.Fill, value: color } as Property;
+                }
+                return { name: PropertyName.Background, value: color } as Property;
+            } 
+          });
+    }
+  }
+  return { name : PropertyName.none, value: 'None'}
 }
+
+
 
