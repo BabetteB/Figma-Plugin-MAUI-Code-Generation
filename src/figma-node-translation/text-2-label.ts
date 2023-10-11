@@ -31,7 +31,7 @@ export function TranslateTextElement(node: TextNode): Element {
     return null;
   }
 
-  function translateLetterSpacing(node : TextNode) : string | null {
+  export function translateLetterSpacing(node : TextNode) : string | null {
     let ls = (node.letterSpacing as LetterSpacing).value;
 
     if (ls !== 0){
@@ -41,7 +41,7 @@ export function TranslateTextElement(node: TextNode): Element {
     return null;
   }
 
-  function getHexColorFromFill(textNode: TextNode): string | null {
+  export function getHexColorFromFill(textNode: TextNode): string | null {
     if (!textNode || !textNode.fills || (textNode.fills as Paint[]).length === 0) {
       return null;
     }
@@ -100,7 +100,7 @@ export function TranslateTextElement(node: TextNode): Element {
     }
   }
 
-  function translateTextTruncationToLineBreakMode(figmaTextTruncation: string): string {
+  export function translateTextTruncationToLineBreakMode(figmaTextTruncation: string): string {
     //OBS ! Do not fulfill all LineBreakModes of Xaml. See following link for more info about LineBreakMode: https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.linebreakmode?view=net-maui-7.0
     switch (figmaTextTruncation) {
       case "ENDING":
@@ -110,7 +110,7 @@ export function TranslateTextElement(node: TextNode): Element {
     }
   }
   
-  function translateTextAutoResizeToFontAutoScalingEnabled(figmaTextAutoResize: string) : string {
+  export function translateTextAutoResizeToFontAutoScalingEnabled(figmaTextAutoResize: string) : string {
     switch (figmaTextAutoResize) {
       case "NONE":
         return "false";
@@ -132,7 +132,7 @@ export function TranslateTextElement(node: TextNode): Element {
     }
   }
   
-  function translateFontWeightToFontAttributes(figmaFontWeight: number): string {
+  export function translateFontWeightToFontAttributes(figmaFontWeight: number): string {
     if (figmaFontWeight > 400) {
       return 'Bold';
     } else {

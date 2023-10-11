@@ -1,3 +1,5 @@
+import { toCamelCase } from "../commonPropertyParser";
+
 export type Binding = {
     name: string,
     value: string
@@ -10,7 +12,7 @@ export class CustomControl {
     bindings :  Binding[];
 
     constructor(controlName : string, bindings : Binding[]){
-        this.name = controlName;
+        this.name = toCamelCase(controlName);
         this.bindings = bindings;
         this.startTag = this.FormatStartTag();
     }

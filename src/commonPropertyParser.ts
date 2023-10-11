@@ -18,7 +18,7 @@ export function TranslateCommonProperties(node : SceneNode) : Property[] {
       return commonProperties;
 }
 
-function toCamelCase(str: string): string {
+export function toCamelCase(str: string): string {
   return str.split(' ')  // Split the string by spaces
       .map((word, index) => {
           // Convert the first word to lowercase and others to capitalize the first letter
