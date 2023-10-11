@@ -7,6 +7,7 @@ export type Element = {
 
 export enum ElementName {
     none,
+    ImageButton,
     CollectionView,
     Background,
     LinearGradientBrush,
@@ -25,7 +26,7 @@ export enum ElementName {
     CheckBox,
     Image,
     Border,
-    ScrollViewer,
+    ScrollView,
     ProgressBar,
     Slider,
     Switch,

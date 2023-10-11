@@ -88,7 +88,7 @@
 
   onmessage = (event) => {
     const data = event.data.pluginMessage;
-    console.log('data: ', data);
+    //console.log('data: ', data);
 
     if (data.type === 'init') {
         const selectedValues = [];
@@ -116,7 +116,6 @@
                         <option value="SWITCH">Radio Buttin</option>
                         <option value="EDITOR">Text Area</option>
                         <option value="ENTRY">Input Field</option>
-                        <option value="COLLECTION">List View</option>
                     </select>
                 </div>
                 `;

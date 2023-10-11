@@ -66,7 +66,7 @@ if (selection !== undefined || null) {
   figma.ui.postMessage({ type: 'init', nodes });
 
   figma.ui.onmessage = (message) => {
-    console.log("got this from the UI", message);
+    //console.log("got this from the UI", message);
     nodes2Parse = updateDisplayNodeUType(nodes, message);
 
     function updateDisplayNodeUType(selection: NestedNode[], message: { node: NestedNode; selectedValue: string }[]): NestedNode[] {

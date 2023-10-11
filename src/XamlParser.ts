@@ -1,7 +1,7 @@
 import { Property, PropertyName } from "./Property";
 import { Element, ElementName } from "./Element";
 
-import { TranslateFigmaFrameToXamlLayout } from "./figma-node-translation/frame-2-layout";
+import { TranslateFigmaFrameToXamlLayout, translateFillsToFigma } from "./figma-node-translation/frame-2-layout";
 import { TranslateEllipseElement } from "./figma-node-translation/shapes/ellipse-2-ellipse";
 import { TranslateTextElement } from "./figma-node-translation/text-2-label";
 import { ContentView } from "./xaml-views-classes/xaml-view";
@@ -11,14 +11,14 @@ import { TranslateLineElement } from "./figma-node-translation/shapes/line-2-lin
 import { NestedNode } from "./code";
 import { ContentPage } from "./xaml-views-classes/xaml-page";
 import { TranslateVectorElement } from "./figma-node-translation/shapes/vector-2-icon";
-import { TranslateButtonElement } from "./user-defined-types-translation/button-2-xaml";
+import { TranslateButtonElement, checkCornerRadius, translateStrokeWeight, translateStrokesToFigma } from "./user-defined-types-translation/button-2-xaml";
 import { TranslateEditorElement } from "./user-defined-types-translation/editor-2-xaml";
 import { TranslateEntryElement } from "./user-defined-types-translation/entry-2-xaml";
 import { TranslateSliderElement } from "./user-defined-types-translation/slider-2-xaml";
 import { TranslateSwitchElement } from "./user-defined-types-translation/switch-2-xaml";
 import { TranslateCheckBoxElement } from "./user-defined-types-translation/checkBox-2-xaml";
-import { TranslateCollectionElement } from "./user-defined-types-translation/collection-2-xaml";
 import { type } from "os";
+import { TranslateImageButtonElement } from "./user-defined-types-translation/button-2-imagebutton";
 
 
 type NestedElements = {
@@ -27,20 +27,21 @@ type NestedElements = {
 }
 
 export function ParseFigma(nodes: NestedNode[]) : string {
-  console.log('Parsing Nodes: ', nodes);
+  //console.log('Parsing Nodes: ', nodes);
   let xamlCode = "";
   let rootnode = nodes[0];
   let contentPage = new ContentPage(rootnode.parent.node.name);
-  let rootLayout = TranslateFigmaFrameToXamlLayout(rootnode.parent.node as FrameNode)
+  let rootView : Element= {name: ElementName.ScrollView, properties: []}
+  let rootLayout : Element= {name: ElementName.VerticalStackLayout, properties: []}
 
-  xamlCode += contentPage.getStartTag() + `\n${formatStartTag(rootLayout)}\n`;
+  xamlCode += contentPage.getStartTag() + `\n${formatStartTag(rootView)}\n` + `\n${formatStartTag(rootLayout)}\n`;
 
   rootnode.children.reverse().forEach( c => {
     //Traslate the Nested elements to 
     xamlCode += formatNestedElement(checkNodeType(c));
   });
 
-  xamlCode += `\n${formatEndTag(rootLayout)}\n` + contentPage.getEndTag();
+  xamlCode += `\n${formatEndTag(rootLayout)}\n` + `\n${formatEndTag(rootView)}\n` + contentPage.getEndTag();
 
   return xamlCode;
 }
@@ -176,33 +177,48 @@ function checkNodeType(nn: NestedNode): NestedElements {
 
 function parseUtypeNodes(nn : NestedNode) : NestedElements {
   let node = nn.parent;
-  let isTextPropertySet = false;   
-  console.log('translating : ', node.utype);
+  //console.log('translating : ', node.utype);
   // Check the node's type using the 'type' property
   switch (node.utype) {
     case 'BUTTON':
+      if (node.node.type === 'INSTANCE') {
+        nn.parent.utype = 'None';
+        return checkNodeType(nn);
+      }
       let buttonNode = node.node as SceneNode;
       let buttonElement = TranslateButtonElement(buttonNode);
-      buttonElement.properties.push(TranslateFillsToFigma(node.node as SceneNode, false))    
+      buttonElement.properties.push(TranslateFillsToFigma(node.node as SceneNode, false))  
+        
       let nestedButton : NestedElements = {parent: buttonElement, children : []};
 
       if (nn.children.length > 0) {
         nn.children.forEach ( n => {
           let childNode = n.parent.node;
-          if (childNode.type === 'TEXT' && !isTextPropertySet) {
+
+          if (childNode.type === 'TEXT') {
             let textElement = TranslateTextElement(childNode as TextNode);
             buttonElement.properties.concat(textElement.properties);
-            isTextPropertySet = true;
 
           } else if ((childNode.type === 'VECTOR') || (n.parent.utype === 'IMAGE')) {
             let vectorElement = TranslateVectorElement(childNode as VectorNode);
-            buttonElement.properties.concat(vectorElement.properties);
-
-          } else {
-            nestedButton.children.push(checkNodeType(n));
+            let imageButtonElement = TranslateImageButtonElement(buttonNode);
+            imageButtonElement.properties.concat(vectorElement.properties);
+            return {parent: imageButtonElement, children : []} as NestedElements;
+          } else if (childNode.type === 'ELLIPSE') {
+            let width = childNode.width;
+            let cornerRadius : Property = {name: PropertyName.CornerRadius, value: (width/2).toString()}
+            buttonElement.properties.push(cornerRadius);
+          } else if (childNode.type === 'RECTANGLE') {
+            let cp = [
+              { name: PropertyName.Background,       value: translateFillsToFigma(childNode)?? 'None' },
+              { name: PropertyName.BorderColor,       value: translateStrokesToFigma(childNode)?? 'None' },
+              { name: PropertyName.BorderWidth,       value: translateStrokeWeight(childNode)  },
+              { name: PropertyName.CornerRadius,      value: checkCornerRadius(childNode) },
+            ]
+            buttonElement.properties.concat(cp);
           }
-        });
-      }
+      });
+    }
 
       return nestedButton;
 
@@ -215,12 +231,9 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
       if (nn.children.length > 0) {
         nn.children.forEach ( n => {
           let childNode = n.parent.node;
-          if (childNode.type === 'TEXT' && !isTextPropertySet) {
+          if (childNode.type === 'TEXT') {
             let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
             editorElement.properties.push(placeholderProp);
-            isTextPropertySet = true;
-          } else {
-            nestedEditor.children.push(checkNodeType(n));
           }
         });
       }
@@ -235,29 +248,15 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
       if (nn.children.length > 0) {
         nn.children.forEach ( n => {
           let childNode = n.parent.node;
-          if (childNode.type === 'TEXT' && !isTextPropertySet) {
+          if (childNode.type === 'TEXT') {
             let placeholderProp : Property = { name: PropertyName.Placeholder, value: (childNode as TextNode).characters};
-            editorElement.properties.push(placeholderProp);
-            isTextPropertySet = true;
-          } else {
-            nestedEntry.children.push(checkNodeType(n));
+            entryElement.properties.push(placeholderProp);
+
           }
         });
       }
 
       return nestedEntry;
-
-    case 'COLLECTION':
-      let collectionNode = node.node as SceneNode;
-      let collectionElement = TranslateCollectionElement(collectionNode);
-      let nestedCollection : NestedElements = {parent: collectionElement, children : []};
-
-      if (nn.children.length > 0) {
-        nn.children.forEach ( n => {
-          nestedCollection.children.push(checkNodeType(n));
-        });
-      }
-      return nestedCollection;
     
     case 'IMAGE':
       let vectorNode = node.node as VectorNode;

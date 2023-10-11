@@ -1,3 +1,5 @@
+import { toCamelCase } from "../commonPropertyParser";
+
 export class ContentPage {
     startTag:   string;
     startEndTag: string = '>';
@@ -6,9 +8,9 @@ export class ContentPage {
     controls :  string = '';
 
     constructor(className : string) {
+        this.name = toCamelCase(className);
         this.startTag = FormatPageStartTag(className);
         this.endTag = '\n</ContentPage>';
-        this.name = className;
     }
 
     getStartTag() {
