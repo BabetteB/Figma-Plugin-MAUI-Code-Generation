@@ -1,9 +1,4 @@
-import { Element, ElementName } from "./Element";
 import { Property, PropertyName } from "./Property";
-import { FigmaNode } from "./figmaNodeTypes";
-
-let borderElement = {name: ElementName.Border, properties: [] as Property[]};
-let background    = {name: ElementName.Background, properties: [] as Property[]}; 
 
 export function TranslateCommonProperties(node : SceneNode) : Property[] {
     const commonProperties: Property[] = [
@@ -14,6 +9,7 @@ export function TranslateCommonProperties(node : SceneNode) : Property[] {
         { name: PropertyName.IsVisible,         value: boolToDefault(node.visible, true)},
         { name: PropertyName.HorizontalOptions, value: translateLayoutAlign(node) ?? 'None' },
         { name: PropertyName.VerticalOptions,   value: translateLayoutAlign(node) ?? 'None' },
+        { name: PropertyName.CornerRadius, value: translateCornerRadius(node)}
       ]
       return commonProperties;
 }
@@ -46,25 +42,7 @@ function translateLayoutAlign(node : SceneNode) : string | null{
   return null
 }
 
-function translateStroke(node : SceneNode) {
-  //color
-  if ('strokes' in node ) {
-    node.strokes.forEach(stroke => {
-      if(stroke.type === 'SOLID' && ((node.strokeWeight as number) !== 0)){
-        let col = stroke.color;      
-        let strokeColor : Property =
-          {name: PropertyName.Stroke,    value: `#${col.r}${col.g}${col.b}`};
 
-        borderElement.properties.push(strokeColor);
-       
-        let strokeWeight : Property =
-        {name: PropertyName.StrokeThickness, value: `${node.strokeWeight as number}`};
-    
-        borderElement.properties.push(strokeWeight);
-      }
-    });
-  }
-}
 
 function boolToDefault(value : boolean, defaultValue : boolean) : string {
   if (value === defaultValue) {
@@ -83,34 +61,14 @@ function translateOpacity(node : BaseNode) : string | null{
   return null
 }
 
-function translateCornerRadius(node : BaseNode) {
-  if (node.type !== (FigmaNode.COMPONENT || FigmaNode.COMPONENT_SET || FigmaNode.FRAME || FigmaNode.INSTANCE || FigmaNode.RECTANGLE)) {
-    return 
+function translateCornerRadius(node : SceneNode) : string {
+  if ('cornerRadius' in node && 'topLeftRadius' in node) {
+    if (node.cornerRadius !== figma.mixed) {
+      return `${node.cornerRadius}`
+    } else {
+        return `${node.topLeftRadius} ${node.topRightRadius} ${node.bottomLeftRadius} ${node.bottomRightRadius}`
+    }
   }
-  let strokeShape : Property =
-      {name: PropertyName.StrokeShape, value: `RoundRectangle  ${node.topLeftRadius}, ${node.topRightRadius}, ${node.bottomLeftRadius}, ${node.bottomRightRadius}`};
-  
-  borderElement.properties.push(strokeShape);
+  return 'None'
 }
 
-function translateShadow(node : BaseNode) : Element | null {
-  if ('effects' in node){
-    node.effects.forEach( effect => {
-      if (effect.type === 'DROP_SHADOW') {
-        let col = effect.color;
-        let off = effect.offset;        
-        let shadowProperties : Property[] = [
-          {name: PropertyName.Brush,    value: `#${col.r}${col.g}${col.b}`},
-          {name: PropertyName.OffSet,   value: `${off.x}, ${off.y}`},
-          {name: PropertyName.Opacity,  value: `${col.a}`},
-          {name: PropertyName.Radius,  value: `${effect.radius}`},
-        ];
-
-        return {name: ElementName.Shadow, properties: shadowProperties};
-
-      }
-    });
-  }
-  return null
-
-}

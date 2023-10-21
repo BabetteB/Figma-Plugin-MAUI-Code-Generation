@@ -1,6 +1,6 @@
 import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
-import { toCamelCase } from "../commonPropertyParser";
+import { TranslateCommonProperties, toCamelCase } from "../commonPropertyParser";
 
 export function TranslateFigmaFrameToXamlLayout(node : FrameNode) {
     switch(node.layoutMode){
@@ -18,7 +18,6 @@ function TranslateFlexLayoutElement(node : FrameNode) : Element {
     const flexLayoutProperties: Property[] = [
       /* Determines whether this layer uses auto-layout to position its children. Defaults to "NONE". */
       { name: PropertyName.Background,          value: translateFillsToFigma(node) ?? 'None' },
-      { name: PropertyName["x:Name"],         value: toCamelCase(node.name) },
         { name: PropertyName.Spacing,           value: translateDefaultNumberValue(node.itemSpacing.toString()) },
         { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
         { name: PropertyName.AlignContent,      value: translateFigmaAlignContent(node.primaryAxisAlignItems) },
@@ -27,7 +26,8 @@ function TranslateFlexLayoutElement(node : FrameNode) : Element {
         { name: PropertyName.Grow,              value: translateDefaultNumberValue(node.layoutGrow.toString()) },
         { name: PropertyName.AlignSelf,         value: translateFigmaAlignItemsToXamlAlignItems(node.layoutAlign) },
       ]
-      const flexLayoutElement: Element = { name: ElementName.FlexLayout, properties: flexLayoutProperties };
+
+      const flexLayoutElement: Element = { name: ElementName.FlexLayout, properties: flexLayoutProperties.concat(TranslateCommonProperties(node)) };
       return flexLayoutElement;
 }
 
@@ -44,8 +44,9 @@ function TranslateHorizontalStackLayoutElement(node : FrameNode) : Element {
       { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
       { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
 
-    ]
-    const horizontalStackLayoutElement: Element = { name: ElementName.HorizontalStackLayout, properties: horizontalStackLayoutProperties };
+    ];
+
+    const horizontalStackLayoutElement: Element = { name: ElementName.HorizontalStackLayout, properties: horizontalStackLayoutProperties.concat(TranslateCommonProperties(node)) };
     return horizontalStackLayoutElement;
   }
   
@@ -54,8 +55,8 @@ function TranslateVerticalStackLayoutElement(node : FrameNode) : Element {
       { name: PropertyName.Background,          value: translateFillsToFigma(node) ?? 'None' },
         { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
         { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
-    ]
-    const vertivalStackLayoutElement: Element = { name: ElementName.VerticalStackLayout, properties: verticalStackLayoutProperties };
+    ];
+    const vertivalStackLayoutElement: Element = { name: ElementName.VerticalStackLayout, properties: verticalStackLayoutProperties.concat(TranslateCommonProperties(node)) };
     return vertivalStackLayoutElement;
 }
 

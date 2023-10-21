@@ -32,7 +32,7 @@ export function ParseFigma(nodes: NestedNode[]) : string {
   let rootnode = nodes[0];
   let contentPage = new ContentPage(rootnode.parent.node.name);
   let rootView : Element= {name: ElementName.ScrollView, properties: []}
-  let rootLayout : Element= {name: ElementName.VerticalStackLayout, properties: []}
+  let rootLayout : Element= TranslateFigmaFrameToXamlLayout(rootnode.parent.node as FrameNode);
 
   xamlCode += contentPage.getStartTag() + `\n${formatStartTag(rootView)}\n` + `\n${formatStartTag(rootLayout)}\n`;
 
@@ -89,10 +89,6 @@ function checkNodeType(nn: NestedNode): NestedElements {
   // Check the node's type using the 'type' property
   switch (node.type) {
     case 'FRAME':
-      if (nn.children.length === 1 && nn.children[0].parent.node.type === 'VECTOR') {
-        // Skip the frame and return the vector directly
-        return checkNodeType(nn.children[0]);
-    } else {
       // Create frame element -> becaomes a xaml layout element 
       let frameNode = node as FrameNode;
       let frameElement = TranslateFigmaFrameToXamlLayout(frameNode);
@@ -101,9 +97,12 @@ function checkNodeType(nn: NestedNode): NestedElements {
       let nestedFrame : NestedElements = {parent: frameElement, children : []};
       nn.children.forEach(n => nestedFrame.children.push(checkNodeType(n)));
 
+      let frameStroke = translateStroke(frameNode);
+      if (frameStroke !== null) {
+        nestedFrame.children.push({parent: frameStroke, children: []})
+      }
    
       return nestedFrame;
-    }
     case 'GROUP':
       let groupElement : Element = {name: ElementName.none, properties: []};
 
@@ -331,6 +330,28 @@ function TranslateFillsToFigma(node: SceneNode, fill : boolean) :  Property {
     }
   }
   return { name : PropertyName.none, value: 'None'}
+}
+
+function translateStroke(node : SceneNode) : Element | null {
+  //color
+  let borderElement = {name: ElementName.Border, properties: [] as Property[]};
+  if ('strokes' in node ) {
+    node.strokes.forEach(stroke => {
+      if(stroke.type === 'SOLID' && ((node.strokeWeight as number) !== 0)){
+        let col = stroke.color;      
+        let strokeColor : Property =
+          {name: PropertyName.Stroke,    value: `#${col.r}${col.g}${col.b}`};
+
+        borderElement.properties.push(strokeColor);
+       
+        let strokeWeight : Property =
+        {name: PropertyName.StrokeThickness, value: `${node.strokeWeight as number}`};
+    
+        borderElement.properties.push(strokeWeight);
+      }
+    });
+  }
+  return borderElement
 }
 
 
