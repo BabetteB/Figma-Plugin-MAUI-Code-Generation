@@ -62,7 +62,7 @@ export function TranslateTextElement(node: TextNode): Element {
     return null;
   }
   
-  function rgbToHex(rgb: RGB): string {
+  export function rgbToHex(rgb: RGB): string {
     const r = Math.round(rgb.r * 255).toString(16).padStart(2, '0');
     const g = Math.round(rgb.g * 255).toString(16).padStart(2, '0');
     const b = Math.round(rgb.b * 255).toString(16).padStart(2, '0');

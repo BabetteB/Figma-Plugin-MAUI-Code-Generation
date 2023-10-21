@@ -1,6 +1,7 @@
 import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
 import { TranslateCommonProperties, toCamelCase } from "../commonPropertyParser";
+import { rgbToHex } from "./text-2-label";
 
 export function TranslateFigmaFrameToXamlLayout(node : FrameNode) {
     switch(node.layoutMode){
@@ -17,7 +18,7 @@ export function TranslateFigmaFrameToXamlLayout(node : FrameNode) {
 function TranslateFlexLayoutElement(node : FrameNode) : Element {
     const flexLayoutProperties: Property[] = [
       /* Determines whether this layer uses auto-layout to position its children. Defaults to "NONE". */
-      { name: PropertyName.Background,          value: translateFillsToFigma(node) ?? 'None' },
+      { name: PropertyName.Background,          value: getHexColorFromFillFrame(node) ?? 'None' },
         { name: PropertyName.Spacing,           value: translateDefaultNumberValue(node.itemSpacing.toString()) },
         { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
         { name: PropertyName.AlignContent,      value: translateFigmaAlignContent(node.primaryAxisAlignItems) },
@@ -40,7 +41,7 @@ export function translateDefaultNumberValue(value : string): string {
 
 function TranslateHorizontalStackLayoutElement(node : FrameNode) : Element {
     const horizontalStackLayoutProperties: Property[] = [
-      { name: PropertyName.Background,          value: translateFillsToFigma(node) ?? 'None' },
+      { name: PropertyName.Background,          value: getHexColorFromFillFrame(node) ?? 'None' },
       { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
       { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
 
@@ -52,7 +53,7 @@ function TranslateHorizontalStackLayoutElement(node : FrameNode) : Element {
   
 function TranslateVerticalStackLayoutElement(node : FrameNode) : Element {
     const verticalStackLayoutProperties: Property[] = [
-      { name: PropertyName.Background,          value: translateFillsToFigma(node) ?? 'None' },
+      { name: PropertyName.Background,          value: getHexColorFromFillFrame(node) ?? 'None' },
         { name: PropertyName.Spacing,           value: node.itemSpacing.toString() },
         { name: PropertyName.Padding,           value: translateDefaultNumberValue(translateFigmaPaddingToXAMLPadding(node)) },
     ];
@@ -101,20 +102,21 @@ function translateFigmaAlignContent(value: string) {
     }
 }
 
-export function translateFillsToFigma(node: SceneNode) : string | null {
+
+export function getHexColorFromFillFrame(node: SceneNode): string | null {
   if ('fills' in node) {
-    let xamlString = `.${ElementName.Background}`;
+    const fill = (node.fills as Paint[])[0]; // We assume the first fill is the one we want
 
-    const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
-    if (fills && fills.length > 0) {
-        fills.forEach((fill) => {
-            if (fill.type === 'SOLID') {
-                // Handle Solid Paint
-                const solidPaint = fill as SolidPaint;
-                return `#${solidPaint.color.r}${solidPaint.color.g}${solidPaint.color.b}`;
+    if(fill === undefined) return null;
 
-            } });
+    if (fill.type === 'SOLID') {
+      const solidFill = fill as SolidPaint;
+      return rgbToHex(solidFill.color);
+    } else if (fill.type.startsWith('GRADIENT')) {
+      // Handle gradient fills (if needed)
+      // You can add logic here to handle gradient fills
+      return null;
     }
   }
- return null;
+  return null;
 }

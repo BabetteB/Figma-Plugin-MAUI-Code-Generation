@@ -1,7 +1,7 @@
 import { Element, ElementName } from "../Element";
 import { Property, PropertyName } from "../Property";
 import { TranslateCommonProperties } from "../commonPropertyParser";
-import { translateDefaultNumberValue, translateFigmaPaddingToXAMLPadding, translateFillsToFigma } from "../figma-node-translation/frame-2-layout";
+import { translateDefaultNumberValue, translateFigmaPaddingToXAMLPadding, getHexColorFromFillFrame } from "../figma-node-translation/frame-2-layout";
 import { getHexColorFromFill, translateFontWeightToFontAttributes, translateLetterSpacing, translateTextAutoResizeToFontAutoScalingEnabled, translateTextTruncationToLineBreakMode } from "../figma-node-translation/text-2-label";
 
 
@@ -17,7 +17,7 @@ export function TranslateButtonElement(node : SceneNode) : Element {
     });
   }
   let frameProperties : Property[] = [
-      { name: PropertyName.Background, value: translateFillsToFigma(node)?? 'None'},
+      { name: PropertyName.Background, value: getHexColorFromFillFrame(node)?? 'None'},
       { name: PropertyName.BorderColor,       value: translateStrokesToFigma(node)?? 'None' },
       { name: PropertyName.BorderWidth,       value: translateStrokeWeight(node)  },
       { name: PropertyName.CornerRadius,      value: checkCornerRadius(node) },

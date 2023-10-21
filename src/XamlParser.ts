@@ -1,7 +1,7 @@
 import { Property, PropertyName } from "./Property";
 import { Element, ElementName } from "./Element";
 
-import { TranslateFigmaFrameToXamlLayout, translateFillsToFigma } from "./figma-node-translation/frame-2-layout";
+import { TranslateFigmaFrameToXamlLayout, getHexColorFromFillFrame } from "./figma-node-translation/frame-2-layout";
 import { TranslateEllipseElement } from "./figma-node-translation/shapes/ellipse-2-ellipse";
 import { TranslateTextElement } from "./figma-node-translation/text-2-label";
 import { ContentView } from "./xaml-views-classes/xaml-view";
@@ -17,7 +17,6 @@ import { TranslateEntryElement } from "./user-defined-types-translation/entry-2-
 import { TranslateSliderElement } from "./user-defined-types-translation/slider-2-xaml";
 import { TranslateSwitchElement } from "./user-defined-types-translation/switch-2-xaml";
 import { TranslateCheckBoxElement } from "./user-defined-types-translation/checkBox-2-xaml";
-import { type } from "os";
 import { TranslateImageButtonElement } from "./user-defined-types-translation/button-2-imagebutton";
 
 
@@ -26,8 +25,10 @@ type NestedElements = {
   children : NestedElements[]
 }
 
+const INDENTATION_SPACES = 4;
+
 export function ParseFigma(nodes: NestedNode[]) : string {
-  //console.log('Parsing Nodes: ', nodes);
+  console.log('Parsing Nodes: ', nodes);
   let xamlCode = "";
   let rootnode = nodes[0];
   let contentPage = new ContentPage(rootnode.parent.node.name);
@@ -36,9 +37,8 @@ export function ParseFigma(nodes: NestedNode[]) : string {
 
   xamlCode += contentPage.getStartTag() + `\n${formatStartTag(rootView)}\n` + `\n${formatStartTag(rootLayout)}\n`;
 
-  rootnode.children.reverse().forEach( c => {
-    //Traslate the Nested elements to 
-    xamlCode += formatNestedElement(checkNodeType(c));
+  rootnode.children.reverse().forEach(c => {
+    xamlCode += formatNestedElement(checkNodeType(c), 2); // starting at level 2 for children of rootLayout
   });
 
   xamlCode += `\n${formatEndTag(rootLayout)}\n` + `\n${formatEndTag(rootView)}\n` + contentPage.getEndTag();
@@ -46,36 +46,46 @@ export function ParseFigma(nodes: NestedNode[]) : string {
   return xamlCode;
 }
 
-function formatNestedElement(element: NestedElements): string {
+function formatNestedElement(element: NestedElements, level: number = 0): string {
   let result = '';
 
   if (element.parent instanceof CustomControl) {
-    result +=  element.parent.getStartTag() + element.parent.getEndTag();
-    
+      // Assuming CustomControl's getStartTag and getEndTag methods handle indentation internally
+      result += element.parent.getStartTag(level) + element.parent.getEndTag(level);
+      
   } else if (element.parent instanceof ContentView) {
-    result += element.parent.getStartTag() + /*`\n${nestedComponent}` +*/ element.parent.getEndTag();
+      // Assuming ContentView's getStartTag and getEndTag methods handle indentation internally
+      let nestedComponent = '';
+      
+      element.children.forEach(c => { 
+        nestedComponent += formatNestedElement(c, level + 1); // Increment the level
+      });
+      result += element.parent.getStartTag(level) + `\n${nestedComponent}` + element.parent.getEndTag(level);
 
   } else {
-    if (element.parent.name === ElementName.none) {
-      return '';
-    }
-    if (element.children.length > 0) {
-      // Start tag
-      result += formatStartTag(element.parent);
+      if (element.parent.name === ElementName.none) {
+          return '';
+      }
+      if (element.children.length > 0) {
+          // Start tag
+          result += formatStartTag(element.parent, level);
 
-      // Iterate over children and recursively call formatNestedElement on each child
-      element.children.forEach( c => { 
-        result += formatNestedElement(c);
-      })
+          // Iterate over children and recursively call formatNestedElement on each child
+          element.children.forEach(c => { 
+              result += formatNestedElement(c, level + 1); // Increment the level
+          });
 
-      result += formatEndTag(element.parent);
-    } else {
-      result += formatShortTag(element.parent);
-    }
+          // End tag
+          result += formatEndTag(element.parent, level);
+      } else {
+          // For elements without children
+          result += formatShortTag(element.parent, level);
+      }
   }
 
   return result;
 }
+
 
 function checkNodeType(nn: NestedNode): NestedElements {
   //Check if the node has been assigned a custom value
@@ -155,14 +165,19 @@ function checkNodeType(nn: NestedNode): NestedElements {
       let nestedControl : NestedElements = {parent: customControl, children : []};
 
       return nestedControl;
+    
+    case 'COMPONENT_SET':
+      let componentSetNode = node.defaultVariant as ComponentNode;
+      console.log('componentSetNode: ', componentSetNode)
+      // TODO: Make new resource file / new window
+      let contentSetView = new ContentView(node.name);
+      let nestedComponentSet : NestedElements = {parent: contentSetView, children : []};
+      console.log('nn.children[0].children: ', nn.children[0].children)
+      nn.children[0].children.forEach(n => nestedComponentSet.children.push(checkNodeType(n)));
+      return nestedComponentSet;
 
     case 'COMPONENT':
-      let componentNode = node as ComponentNode;
-      // TODO: Make new resource file / new window
-      let contentView = new ContentView(node.name);
-      let nestedComponent : NestedElements = {parent: contentView, children : []};
-      nn.children.forEach(n => nestedComponent.children.push(checkNodeType(n)));
-      return nestedComponent;
+      
 
     case 'STAR':
     case 'BOOLEAN_OPERATION':
@@ -209,7 +224,7 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
             buttonElement.properties.push(cornerRadius);
           } else if (childNode.type === 'RECTANGLE') {
             let cp = [
-              { name: PropertyName.Background,       value: translateFillsToFigma(childNode)?? 'None' },
+              { name: PropertyName.Background,       value: getHexColorFromFillFrame(childNode)?? 'None' },
               { name: PropertyName.BorderColor,       value: translateStrokesToFigma(childNode)?? 'None' },
               { name: PropertyName.BorderWidth,       value: translateStrokeWeight(childNode)  },
               { name: PropertyName.CornerRadius,      value: checkCornerRadius(childNode) },
@@ -289,47 +304,50 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
   }
 }
 
-function formatStartTag(element: Element): string {
+function formatStartTag(element: Element, level: number = 0): string {
+  const indent = ' '.repeat(level * INDENTATION_SPACES);
   const propertyString = element.properties
-    .filter((prop) => (prop.value !== 'None')) // Exclude properties with value 'None' because then it is set to default value
-    .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(` \n\t`);
+      .filter((prop) => (prop.value !== 'None'))
+      .map((prop) => `\n${indent}    ${PropertyName[prop.name]}="${prop.value}"`)
+      .join('');
 
-  return `<${ElementName[element.name]} ${propertyString}>\n`;
+  return `${indent}<${ElementName[element.name]}${propertyString}>\n`;
 }
 
-function formatShortTag(element : Element): string {
+function formatShortTag(element: Element, level: number = 0): string {
+  const indent = ' '.repeat(level * INDENTATION_SPACES);
   const propertyString = element.properties
-    .filter((prop) => prop.value !== 'None') // Exclude properties with value 'None' because then it is set to default value
-    .map((prop) => `${PropertyName[prop.name]}="${prop.value}"`)
-    .join(" " + `\n\t`);
+      .filter((prop) => prop.value !== 'None')
+      .map((prop) => `\n${indent}    ${PropertyName[prop.name]}="${prop.value}"`)
+      .join('');
 
-  return `<${ElementName[element.name]} ${propertyString}/>\n`;
+  return `${indent}<${ElementName[element.name]}${propertyString}/>\n`;
 }
 
-function formatEndTag(element: Element): string {
-  return `</${ElementName[element.name]}>\n`;
+function formatEndTag(element: Element, level: number = 0): string {
+  const indent = ' '.repeat(level * INDENTATION_SPACES);
+  return `${indent}</${ElementName[element.name]}>\n`;
 }
 
-function TranslateFillsToFigma(node: SceneNode, fill : boolean) :  Property {
+function TranslateFillsToFigma(node: SceneNode, fill: boolean): Property {
+  let property: Property = {name: PropertyName.none, value: ''};
+
   if ('fills' in node) {
-    const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
-    if (fills && fills.length > 0) {
-        fills.forEach((fill) => {
-            if (fill.type === 'SOLID') {
-                // Handle Solid Paint
-                const solidPaint = fill as SolidPaint;
-                const color = `#${solidPaint.color.r}${solidPaint.color.g}${solidPaint.color.b}`;
+      const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
+      if (fills && fills.length > 0) {
+          const paint: Paint = fills[0]; // Take the first paint/fill for simplicity
 
-                if (fill) {
-                  return { name: PropertyName.Fill, value: color } as Property;
-                }
-                return { name: PropertyName.Background, value: color } as Property;
-            } 
-          });
-    }
+          if (paint.type === 'SOLID') {
+              const color = paint.color;
+              const alpha = (paint.opacity || 1) * 255;
+              property.value = `#${Math.round(alpha).toString(16).padStart(2, '0')}${Math.round(color.r * 255).toString(16).padStart(2, '0')}${Math.round(color.g * 255).toString(16).padStart(2, '0')}${Math.round(color.b * 255).toString(16).padStart(2, '0')}`;
+              property.name = fill ? PropertyName.Fill : PropertyName.Background;
+          }
+          // TODO: Handle other paint types if necessary
+      }
   }
-  return { name : PropertyName.none, value: 'None'}
+
+  return property;
 }
 
 function translateStroke(node : SceneNode) : Element | null {
@@ -348,10 +366,11 @@ function translateStroke(node : SceneNode) : Element | null {
         {name: PropertyName.StrokeThickness, value: `${node.strokeWeight as number}`};
     
         borderElement.properties.push(strokeWeight);
+        return borderElement;
       }
     });
   }
-  return borderElement
+  return null
 }
 
 
