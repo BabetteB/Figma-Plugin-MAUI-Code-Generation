@@ -33,7 +33,7 @@ export function ParseFigma(nodes: NestedNode[]) : string {
   let rootnode = nodes[0];
   let contentPage = new ContentPage(rootnode.parent.node.name);
   let rootView : Element= {name: ElementName.ScrollView, properties: []}
-  let rootLayout : Element= TranslateFigmaFrameToXamlLayout(rootnode.parent.node as FrameNode);
+  let rootLayout : Element= {name: ElementName.VerticalStackLayout, properties: []};
 
   xamlCode += contentPage.getStartTag() + `\n${formatStartTag(rootView)}\n` + `\n${formatStartTag(rootLayout)}\n`;
 
@@ -171,14 +171,12 @@ function checkNodeType(nn: NestedNode): NestedElements {
       console.log('componentSetNode: ', componentSetNode)
       // TODO: Make new resource file / new window
       let contentSetView = new ContentView(node.name);
-      let nestedComponentSet : NestedElements = {parent: contentSetView, children : []};
-      console.log('nn.children[0].children: ', nn.children[0].children)
+      let rootLayout : Element= {name: ElementName.VerticalStackLayout, properties: []};
+      let nestedComponentSet : NestedElements = {parent: contentSetView, children : [{parent : rootLayout, children: []}]};
       nn.children[0].children.forEach(n => nestedComponentSet.children.push(checkNodeType(n)));
       return nestedComponentSet;
 
     case 'COMPONENT':
-      
-
     case 'STAR':
     case 'BOOLEAN_OPERATION':
     case 'SLICE':
@@ -350,7 +348,7 @@ function TranslateFillsToFigma(node: SceneNode, fill: boolean): Property {
   return property;
 }
 
-function translateStroke(node : SceneNode) : Element | null {
+function translateStroke(node : SceneNode) : NestedElements | null {
   //color
   let borderElement = {name: ElementName.Border, properties: [] as Property[]};
   if ('strokes' in node ) {
@@ -366,7 +364,9 @@ function translateStroke(node : SceneNode) : Element | null {
         {name: PropertyName.StrokeThickness, value: `${node.strokeWeight as number}`};
     
         borderElement.properties.push(strokeWeight);
-        return borderElement;
+        let innerLayout = {name : ElementName.VerticalStackLayout, properties: [] as Property[]}
+
+        return {parent : borderElement, children: [innerLayout]};
       }
     });
   }
