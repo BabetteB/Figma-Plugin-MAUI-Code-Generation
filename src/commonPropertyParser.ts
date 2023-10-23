@@ -9,7 +9,6 @@ export function TranslateCommonProperties(node : SceneNode) : Property[] {
         { name: PropertyName.IsVisible,         value: boolToDefault(node.visible, true)},
         { name: PropertyName.HorizontalOptions, value: translateLayoutAlign(node) ?? 'None' },
         { name: PropertyName.VerticalOptions,   value: translateLayoutAlign(node) ?? 'None' },
-        { name: PropertyName.CornerRadius, value: translateCornerRadius(node)}
       ]
       return commonProperties;
 }
@@ -61,14 +60,4 @@ function translateOpacity(node : BaseNode) : string | null{
   return null
 }
 
-function translateCornerRadius(node : SceneNode) : string {
-  if ('cornerRadius' in node && 'topLeftRadius' in node) {
-    if (node.cornerRadius !== figma.mixed) {
-      return `${node.cornerRadius}`
-    } else {
-        return `${node.topLeftRadius} ${node.topRightRadius} ${node.bottomLeftRadius} ${node.bottomRightRadius}`
-    }
-  }
-  return 'None'
-}
 

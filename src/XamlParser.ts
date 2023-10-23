@@ -99,20 +99,35 @@ function checkNodeType(nn: NestedNode): NestedElements {
   // Check the node's type using the 'type' property
   switch (node.type) {
     case 'FRAME':
-      // Create frame element -> becaomes a xaml layout element 
       let frameNode = node as FrameNode;
       let frameElement = TranslateFigmaFrameToXamlLayout(frameNode);
 
-      frameElement.properties.push(TranslateFillsToFigma(node, false));
+      // This will serve as the main nested element to return
       let nestedFrame : NestedElements = {parent: frameElement, children : []};
+
+      // Assign children directly to frameElement first
       nn.children.forEach(n => nestedFrame.children.push(checkNodeType(n)));
 
+      // Handle the case when the frameNode has cornerRadius
+      if (frameNode.cornerRadius !== 0) {
+        let cornerRadius: Property = { name: PropertyName.StrokeShape, value: `RoundRectangle ${frameNode.topLeftRadius} ${frameNode.topRightRadius} ${frameNode.bottomLeftRadius} ${frameNode.bottomRightRadius}` }
+        let borderElement = { name: ElementName.Border, properties: [cornerRadius] };
+
+        // In this setup, the borderElement wraps the frameElement (which already has the children)
+        nestedFrame = {
+          parent: borderElement,
+          children: [nestedFrame] // Note that we're wrapping the existing nestedFrame
+        };
+      }
+
+      // Translate and add frame stroke if exists
       let frameStroke = translateStroke(frameNode);
       if (frameStroke !== null) {
-        nestedFrame.children.push({parent: frameStroke, children: []})
+        nestedFrame.children.push({parent: frameStroke.parent, children: frameStroke.children})
       }
-   
+
       return nestedFrame;
+    
     case 'GROUP':
       let groupElement : Element = {name: ElementName.none, properties: []};
 
@@ -197,42 +212,62 @@ function parseUtypeNodes(nn : NestedNode) : NestedElements {
         nn.parent.utype = 'None';
         return checkNodeType(nn);
       }
+
       let buttonNode = node.node as SceneNode;
       let buttonElement = TranslateButtonElement(buttonNode);
-      buttonElement.properties.push(TranslateFillsToFigma(node.node as SceneNode, false))  
-        
-      let nestedButton : NestedElements = {parent: buttonElement, children : []};
+      buttonElement.properties.push(TranslateFillsToFigma(node.node as SceneNode, false));
+
+      let nestedButton : NestedElements = {parent: {name: ElementName.none, properties: []}, children : []};
 
       if (nn.children.length > 0) {
-        nn.children.forEach ( n => {
+        nn.children.forEach(n => {
           let childNode = n.parent.node;
 
           if (childNode.type === 'TEXT') {
             let textElement = TranslateTextElement(childNode as TextNode);
             buttonElement.properties.concat(textElement.properties);
+            nestedButton = { parent: buttonElement, children: [] };
 
           } else if ((childNode.type === 'VECTOR') || (n.parent.utype === 'IMAGE')) {
             let vectorElement = TranslateVectorElement(childNode as VectorNode);
             let imageButtonElement = TranslateImageButtonElement(buttonNode);
             imageButtonElement.properties.concat(vectorElement.properties);
-            return {parent: imageButtonElement, children : []} as NestedElements;
+            nestedButton = { parent: imageButtonElement, children: [] };
+
           } else if (childNode.type === 'ELLIPSE') {
+            let cp = [
+              { name: PropertyName.Background, value: getHexColorFromFillFrame(childNode) ?? 'None' },
+              { name: PropertyName.BorderColor, value: translateStrokesToFigma(childNode) ?? 'None' },
+              { name: PropertyName.BorderWidth, value: translateStrokeWeight(childNode) },
+            ]
+
+            buttonElement.properties.concat(cp);
+
             let width = childNode.width;
-            let cornerRadius : Property = {name: PropertyName.CornerRadius, value: (width/2).toString()}
-            buttonElement.properties.push(cornerRadius);
+            let cornerRadius: Property = { name: PropertyName.StrokeShape, value: `RoundRectangle ${(width / 2).toString()}` }
+
+            let borderElement = { name: ElementName.Border, properties: [cornerRadius] };
+            nestedButton = { parent: borderElement, children: [{ parent: buttonElement, children: [] }] };
+
           } else if (childNode.type === 'RECTANGLE') {
             let cp = [
-              { name: PropertyName.Background,       value: getHexColorFromFillFrame(childNode)?? 'None' },
-              { name: PropertyName.BorderColor,       value: translateStrokesToFigma(childNode)?? 'None' },
-              { name: PropertyName.BorderWidth,       value: translateStrokeWeight(childNode)  },
-              { name: PropertyName.CornerRadius,      value: checkCornerRadius(childNode) },
+              { name: PropertyName.Background, value: getHexColorFromFillFrame(childNode) ?? 'None' },
+              { name: PropertyName.BorderColor, value: translateStrokesToFigma(childNode) ?? 'None' },
+              { name: PropertyName.BorderWidth, value: translateStrokeWeight(childNode) },
             ]
-            buttonElement.properties.concat(cp);
-          }
-      });
-    }
 
+            buttonElement.properties.concat(cp);
+            let cornerRadius: Property = { name: PropertyName.StrokeShape, value: `RoundRectangle ${checkCornerRadius(childNode)}` }
+            let borderElement = { name: ElementName.Border, properties: [cornerRadius] };
+
+            nestedButton = { parent: borderElement, children: [{ parent: buttonElement, children: [] }] }; 
+          }
+        });
+      } else {
+        nestedButton = { parent: buttonElement, children: [] };
+      }
       return nestedButton;
+
 
     case 'EDITOR':
       let editorNode = node.node as SceneNode;
@@ -328,7 +363,7 @@ function formatEndTag(element: Element, level: number = 0): string {
 }
 
 function TranslateFillsToFigma(node: SceneNode, fill: boolean): Property {
-  let property: Property = {name: PropertyName.none, value: ''};
+  let property: Property = {name: PropertyName.none, value: 'None'};
 
   if ('fills' in node) {
       const fills: ReadonlyArray<Paint> = node.fills as ReadonlyArray<Paint>;
